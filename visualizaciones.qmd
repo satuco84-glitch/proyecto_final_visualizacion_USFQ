@@ -90,6 +90,9 @@ procesos_identificados_potencial = int(
     (procesos_estado["Estado_Coincidencia"] == "Match Potencial").sum()
 )
 procesos_identificados = (
+    procesos_identificados_confiable 
+)
+procesos_match=(
     procesos_identificados_confiable + procesos_identificados_potencial
 )
 procesos_no_identificados = total_procesos - procesos_identificados
@@ -185,7 +188,7 @@ kpi_html = f"""
     </div>
     <div class="kpi-card">
         <div class="kpi-title">NCO vinculadas a proceso</div>
-        <div class="kpi-value">{nco_con_match:,}</div>
+        <div class="kpi-value">{procesos_match:,}</div>
     </div>
     <div class="kpi-card">
         <div class="kpi-title">Tasa de conversión</div>
@@ -198,10 +201,10 @@ kpi_html = f"""
     </div>
     <div class="kpi-card purple">
         <div class="kpi-title">Procesos SERCOP vinculados</div>
-        <div class="kpi-value">{procesos_identificados:,}</div>
+        <div class="kpi-value">{procesos_match:,}</div>
     </div>
     <div class="kpi-card purple">
-        <div class="kpi-title">Cobertura sobre procesos</div>
+        <div class="kpi-title">Cobertura sobre procesos match confiable</div>
         <div class="kpi-value">{porcentaje_identificacion_procesos:.1f}%</div>
     </div>
     
