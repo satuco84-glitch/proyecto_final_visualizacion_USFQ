@@ -95,7 +95,7 @@ procesos_identificados = (
 procesos_match=(
     procesos_identificados_confiable + procesos_identificados_potencial
 )
-procesos_no_identificados = total_procesos - procesos_identificados
+procesos_no_identificados = total_procesos - procesos_match
 porcentaje_identificacion_procesos = (procesos_identificados / total_procesos) * 100
 
 # =========================
@@ -261,7 +261,7 @@ proc_df = pd.DataFrame({
         procesos_no_identificados
     ]
 })
-
+print(procesos_no_identificados)
 # Gráfico 1: Eficiencia de la NCO (¿Cuántas terminan en proceso?)
 grafico_nco = (
     alt.Chart(conv_df)
@@ -1627,3 +1627,5 @@ if not top_entidades_alto_monto.empty:
 ```
 
 Este ranking permite identificar qué entidades concentran simultáneamente montos más altos y procesos con cambio textual superior al 10%, lo que ayuda a priorizar revisiones sobre casos de mayor relevancia económica.
+
+

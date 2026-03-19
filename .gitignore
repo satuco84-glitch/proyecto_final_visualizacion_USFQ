@@ -1,0 +1,22 @@
+#
+# Keep repo lean: track only the published site and core Quarto sources.
+#
+
+# Ignore everything by default
+*
+
+# Allow Git metadata and this ignore file
+!.gitignore
+
+# Keep Quarto config and source qmds
+!_quarto.yml
+!visualizaciones.qmd
+!index.qmd
+!data_cleaning.qmd
+
+# Keep rendered site
+!docs/
+!docs/**
+
+/.quarto/
+**/*.quarto_ipynb
