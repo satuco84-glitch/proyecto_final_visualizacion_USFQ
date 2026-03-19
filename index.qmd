@@ -171,8 +171,8 @@ En el ecosistema de contratación pública, existe una etapa inicial que son las
 <div class="glow-box">
 <h2 class="section-title">Objetivos y Preguntas Clave</h2>
 <ul>
-    <li><b>Tasa de conversión</b>: ¿Qué porcentaje de NCO termina en proceso formal y cuál es su estado final?</li>
-    <li><b>Integridad de la información</b>: ¿Cuáles procesos tuvieron mayor cambio entre lo publicado en NCO y lo adjudicado o contratado?</li>
+    <li><b>Tasa de conversión</b>: ¿Qué proporción de necesidades de contratación publicadas en NCO logra vincularse con un proceso formal registrado en SERCOP y cuál es el estado final de esos procesos</li>
+    <li><b>Integridad de la información</b>: ¿Qué procesos en estados avanzados del ciclo de contratación presentan mayor diferencia entre la necesidad publicada en NCO y el objeto del proceso formal asociado?</li>
     <li><b>Patrones territoriales y de entidades</b>: ¿En qué entidades y provincias se concentran los casos con alto cambio?</li>
     <li><b>Patrones en tipos de contratación</b>: ¿Qué tipos de contratación presentan más diferencia entre necesidad y resultado?</li>
 

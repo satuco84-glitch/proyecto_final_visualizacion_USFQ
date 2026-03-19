@@ -670,6 +670,55 @@ kpi_html = f"""
 
 display(HTML(kpi_html))
 ```
+### Distribución del cambio textual
+
+```{python}
+#| echo: false
+#| label: fig-hist-cambio
+#| fig-cap: "Distribución del cambio textual >= 10% en procesos formales con match confiable."
+res_hist = res_formal[res_formal["cambio_textual"] >= umbral].copy()
+max_cambio = float(res_hist["cambio_textual"].max()) if not res_hist.empty else umbral
+lim_sup = min(max_cambio + 10, 100)
+
+hist_cambio = (
+    alt.Chart(res_hist)
+    .mark_bar(opacity=0.85, cornerRadiusEnd=2)
+    .encode(
+        x=alt.X(
+            "cambio_textual:Q",
+            bin=alt.Bin(step=2, extent=[umbral, lim_sup]),
+            title=f"CAMBIO TEXTUAL (%) ≥ {umbral}"
+        ),
+        y=alt.Y("count():Q", title="NÚMERO DE PROCESOS"),
+        tooltip=[
+            alt.Tooltip("count():Q", title="Procesos"),
+            alt.Tooltip("cambio_textual:Q", bin=alt.Bin(step=2), title="Rango (%)")
+        ],
+        color=alt.value("#ff00bf6c"),
+        stroke=alt.value("#f759cfbd")
+    )
+
+    .properties(
+        title="DISTRIBUCIÓN DEL CAMBIO TEXTUAL (PROCESOS FORMALES)",
+        width=700,
+        height=320
+    )
+    .configure(
+        background="#0C0C0C"
+    ).configure_view(
+        strokeOpacity=0
+    ).configure_title(
+        color="#00FFFF", font=BODY_FONT, fontSize=18, anchor="start"
+    ).configure_axis(
+        gridColor="#1a1a1a", domainColor="#00FFFF", labelColor="#E0E0E0",
+        titleColor="#00FFFF", labelFont=BODY_FONT, titleFont=BODY_FONT
+    )
+)
+
+display(hist_cambio)
+```
+
+Este histograma resume cuántos procesos formales (con match confiable) quedan en cada rango de cambio textual por encima del umbral del 10%. Complementa el ranking mostrando la forma completa de la distribución.
 ```{python}
 #| label: fig-ranking-cambio
 #| fig-cap: "Top 20 procesos con mayor cambio textual entre la NCO y el resultado formal."
@@ -741,52 +790,7 @@ display(chart_ranking_tron)
 Se observa que 10 de los 20 procesos con mayor cambio textual corresponden a Gobiernos Autónomos Descentralizados. Este resultado nos podría dar una alerta de en donde se podría presentar casos de direccionamiento de procesos. 
 
 
-### Distribución del cambio textual (>= {umbral}%)
 
-```{python}
-#| echo: false
-#| label: fig-hist-cambio
-#| fig-cap: "Distribución del cambio textual (>= {umbral}%) en procesos formales con match confiable."
-res_hist = res_best[res_best["cambio_textual"] >= umbral].copy()
-
-hist_cambio = (
-    alt.Chart(res_hist)
-    .mark_bar(opacity=0.85, cornerRadiusEnd=2)
-    .encode(
-        x=alt.X(
-            "cambio_textual:Q",
-            bin=alt.Bin(step=2, extent=[umbral, 100]),
-            title=f"CAMBIO TEXTUAL (%) ≥ {umbral}"
-        ),
-        y=alt.Y("count():Q", title="NÚMERO DE PROCESOS"),
-        tooltip=[
-            alt.Tooltip("count():Q", title="Procesos"),
-            alt.Tooltip("cambio_textual:Q", bin=alt.Bin(step=2), title="Rango (%)")
-        ],
-        color=alt.value("#FF8C00"),
-        stroke=alt.value("#FF8C00")
-    )
-    .properties(
-        title="DISTRIBUCIÓN DEL CAMBIO TEXTUAL (PROCESOS FORMALES)",
-        width=700,
-        height=320
-    )
-    .configure(
-        background="#0C0C0C"
-    ).configure_view(
-        strokeOpacity=0
-    ).configure_title(
-        color="#00FFFF", font=BODY_FONT, fontSize=18, anchor="start"
-    ).configure_axis(
-        gridColor="#1a1a1a", domainColor="#00FFFF", labelColor="#E0E0E0",
-        titleColor="#00FFFF", labelFont=BODY_FONT, titleFont=BODY_FONT
-    )
-)
-
-display(hist_cambio)
-```
-
-Este histograma resume cuántos procesos formales (con match confiable) quedan en cada rango de cambio textual por encima del umbral del {umbral}%. Complementa el ranking mostrando la forma completa de la distribución.
 
 
 ## Mapa de Calor: Concentración de alto cambio en entidades.
@@ -807,7 +811,7 @@ res_heatmap = res_best[res_best["cambio_textual"] >= 10].copy()
 res_heatmap["Acronimo"] = res_heatmap["Codigo_Proceso"].astype(str).str.split("-").str[0]
 
 # Para Entidades, tomamos el Top 15 para que sea legible, pero con matriz completa de acrónimos
-top_entidades = res_heatmap["Entidad_Procesos_Todos"].value_counts().head(15).index.tolist()
+top_entidades = res_heatmap["Entidad_Procesos_Todos"].value_counts().head(20).index.tolist()
 todos_acronimos = sorted(res_heatmap["Acronimo"].unique())
 
 # Crear todas las combinaciones posibles para el Top 15 de entidades
@@ -836,7 +840,7 @@ heatmap_alto_cambio = alt.Chart(counts).mark_rect(stroke="#3d023dff", strokeWidt
         alt.Tooltip("Cantidad:Q", title="Procesos con Alto Cambio")
     ]
 ).properties(
-    title="CONCENTRACIÓN DE CAMBIO TEXTUAL POR ENTIDAD RANKING TOP 15",
+    title="CONCENTRACIÓN DE CAMBIO TEXTUAL POR ENTIDAD RANKING TOP 20",
     width=600,
     height=450 
 ).configure(
@@ -968,7 +972,7 @@ De esta manera, la longitud de la barra muestra el número de casos, mientras qu
 
 En esta visualización, se define como **alto cambio** a los casos donde:
 
-**cambio_textual >= 20**
+**cambio_textual >= 10**
 
 donde:
 
