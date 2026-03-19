@@ -1,0 +1,33 @@
+project:
+  type: website
+  output-dir: docs
+  render:
+    - index.qmd
+    - visualizaciones.qmd
+    - data_cleaning.qmd
+
+website:
+  title: "MENÚ"
+  sidebar:
+    id: main-sidebar
+    position: right
+    style: "docked"
+    search: true
+    contents:
+      - text: "Inicio"
+        href: index.qmd
+      - text: "Visualizaciones"
+        href: visualizaciones.qmd
+      - text: "Preparacion de Datos"
+        href: data_cleaning.qmd
+
+format:
+  html:
+    theme: darkly
+    code-fold: true
+    toc: true
+    toc-location: left
+
+execute:
+  engine: jupyter
+  python: 'C:/Users/MY  DELL/anaconda3/python.exe'

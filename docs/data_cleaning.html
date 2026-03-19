@@ -1,0 +1,1246 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.8.27">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+
+<title>Preparación de Datos – MENÚ</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+</style>
+
+
+<script src="https://cdn.jsdelivr.net/npm/jquery@3.5.1/dist/jquery.min.js" integrity="sha384-ZvpUoO/+PpLXR1lu4jmpXWu80pZlYUAfxl5NsBMWOEPSjUn/6Z/hRTt8+pR6L4N2" crossorigin="anonymous"></script><script src="site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="site_libs/quarto-nav/headroom.min.js"></script>
+<script src="site_libs/clipboard/clipboard.min.js"></script>
+<script src="site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="site_libs/quarto-search/fuse.min.js"></script>
+<script src="site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="./">
+<script src="site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="site_libs/quarto-html/axe/axe-check.js" type="module"></script>
+<script src="site_libs/quarto-html/popper.min.js"></script>
+<script src="site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="site_libs/quarto-html/anchor.min.js"></script>
+<link href="site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="site_libs/quarto-html/quarto-syntax-highlighting-dark-4d9afe2b8d18ee9fa5d0d57b5ed4214d.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="site_libs/bootstrap/bootstrap-404917c8353ff5a3432db9f0d9b9e56b.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="dark">
+<script id="quarto-search-options" type="application/json">{
+  "location": "sidebar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "start",
+  "type": "textbox",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+<script src="https://cdn.jsdelivr.net/npm/requirejs@2.3.6/require.min.js" integrity="sha384-c9c+LnTbwQ3aujuU7ULEPVvgLs+Fn6fJUvIGTsuu1ZcCf11fiEubah0ttpca4ntM sha384-6V1/AdqZRWk1KAlWbKBlGhN7VG4iE/yAZcO6NZPMF8od0vukrvr0tg4qY6NSrItx" crossorigin="anonymous"></script>
+
+<script type="application/javascript">define('jquery', [],function() {return window.jQuery;})</script>
+
+
+</head>
+
+<body class="nav-sidebar docked quarto-light">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+  <nav class="quarto-secondary-nav">
+    <div class="container-fluid d-flex">
+      <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+        <i class="bi bi-layout-text-sidebar-reverse"></i>
+      </button>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="./data_cleaning.html">Preparacion de Datos</a></li></ol></nav>
+        <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
+        </a>
+      <button type="button" class="btn quarto-search-button" aria-label="Search" onclick="window.quartoOpenSearch();">
+        <i class="bi bi-search"></i>
+      </button>
+    </div>
+  </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-full">
+<!-- sidebar -->
+  <nav id="quarto-sidebar" class="sidebar collapse collapse-horizontal quarto-sidebar-collapse-item sidebar-navigation docked overflow-auto">
+    <div class="pt-lg-2 mt-2 text-left sidebar-header">
+    <div class="sidebar-title mb-0 py-0">
+      <a href="./">MENÚ</a> 
+    </div>
+      </div>
+        <div class="mt-2 flex-shrink-0 align-items-center">
+        <div class="sidebar-search">
+        <div id="quarto-search" class="" title="Search"></div>
+        </div>
+        </div>
+    <div class="sidebar-menu-container"> 
+    <ul class="list-unstyled mt-1">
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Inicio</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./visualizaciones.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Visualizaciones</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./data_cleaning.html" class="sidebar-item-text sidebar-link active">
+ <span class="menu-text">Preparacion de Datos</span></a>
+  </div>
+</li>
+    </ul>
+    </div>
+    
+</nav>
+<div id="quarto-sidebar-glass" class="quarto-sidebar-collapse-item" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item"></div>
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar zindex-bottom">
+    </div>
+<!-- main -->
+<main class="content page-columns page-full column-body" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title">Preparación de Datos</h1>
+</div>
+
+
+
+<div class="quarto-title-meta column-body">
+
+    
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<div id="b0864ee2" class="cell" data-execution_count="1">
+<div class="cell-output cell-output-display">
+
+<style>
+    @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=JetBrains+Mono:wght@300;500&display=swap');
+
+    body {
+        background-color: #050505 !important;
+        color: #e0e0e0;
+        font-family: 'JetBrains Mono', monospace;
+    }
+
+    .audit-hero {
+        background: linear-gradient(180deg, rgba(0, 255, 255, 0.06) 0%, rgba(0, 0, 0, 0) 100%);
+        padding: 44px 20px;
+        text-align: center;
+        border-bottom: 1px solid #00FFFF;
+        margin-bottom: 36px;
+        box-shadow: 0 10px 30px rgba(0, 255, 255, 0.08);
+    }
+
+    .audit-title {
+        font-family: 'Orbitron', sans-serif;
+        font-size: 2.5rem;
+        color: #00FFFF;
+        text-transform: uppercase;
+        letter-spacing: 3px;
+        text-shadow: 0 0 15px rgba(0, 255, 255, 0.45);
+        margin-bottom: 12px;
+    }
+
+    .audit-subtitle {
+        max-width: 980px;
+        margin: 0 auto;
+        color: #c7ffff;
+        line-height: 1.7;
+    }
+
+    .step-card {
+        background: #0C0C0C;
+        border: 1px solid #333;
+        border-left: 4px solid #00FFFF;
+        padding: 2.2rem;
+        margin-bottom: 2.5rem;
+        border-radius: 6px;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.45);
+    }
+
+    .step-num {
+        font-family: 'Orbitron', sans-serif;
+        color: #00FF7F;
+        font-size: 0.8rem;
+        border: 1px solid #00FF7F;
+        display: inline-block;
+        padding: 3px 10px;
+        margin-bottom: 14px;
+        letter-spacing: 2px;
+    }
+
+    .step-header {
+        font-family: 'Orbitron', sans-serif;
+        color: #00FFFF;
+        font-size: 1.45rem;
+        margin-bottom: 18px;
+        text-transform: uppercase;
+    }
+
+    .justification-box {
+        background: rgba(0, 255, 127, 0.06);
+        border: 1px dashed #00FF7F;
+        padding: 15px;
+        margin-top: 20px;
+        font-size: 0.94rem;
+        line-height: 1.6;
+    }
+
+    .warning-box {
+        background: rgba(255, 170, 0, 0.06);
+        border: 1px dashed #FFA500;
+        padding: 15px;
+        margin-top: 20px;
+        font-size: 0.94rem;
+        line-height: 1.6;
+    }
+
+    .highlight-cyan { color: #00FFFF; font-weight: bold; }
+    .highlight-green { color: #00FF7F; font-weight: bold; }
+    .highlight-pink { color: #FF00FF; font-weight: bold; }
+
+    .cell-output pre,
+    .cell-output-stdout pre,
+    .cell-output-display,
+    .cell-output-display pre {
+        background: #0C0C0C !important;
+        color: #E0E0E0 !important;
+        border: 1px solid #333 !important;
+        border-left: 3px solid #00FFFF !important;
+    }
+
+    .cell-output table,
+    .cell-output-display table {
+        color: #E0E0E0 !important;
+        background-color: #0C0C0C !important;
+    }
+
+    .cell-output th,
+    .cell-output td,
+    .cell-output-display th,
+    .cell-output-display td {
+        color: #E0E0E0 !important;
+        background-color: #0C0C0C !important;
+        border-color: #333 !important;
+    }
+</style>
+</div>
+</div>
+<div class="audit-hero">
+<h1 class="audit-title">
+Preparación y Limpieza de Datos
+</h1>
+<p class="audit-subtitle">
+Este documento resume cómo se preparó el dataset final antes del análisis visual. El objetivo es dejar explícitas las decisiones técnicas sobre carga, validación, tratamiento de nulos, transformaciones analíticas y filtros aplicados sobre <span class="highlight-cyan">resultados_matcher3_v3.csv</span>.
+</p>
+</div>
+<div class="page-columns page-full">
+<div class="step-card">
+<div class="step-num">
+ETAPA 01
+</div>
+<div class="step-header">
+Carga del Dataset
+</div>
+<p>
+Se trabaja con el archivo consolidado <span class="highlight-cyan">resultados_matcher3_v3.csv</span>, que contiene la salida del proceso de vinculación entre procesos formales de SERCOP y necesidades de contratación NCO.
+</p>
+<div id="ccf99a73" class="cell" data-execution_count="3">
+<div class="cell-output cell-output-stdout">
+<pre><code>Dataset cargado: resultados_matcher3_v3.csv
+Filas: 38,997
+Columnas: 20</code></pre>
+</div>
+</div>
+</div>
+<div class="step-card" style="border-left-color: #00FF7F;">
+<div class="step-num" style="color: #00FF7F; border-color: #00FF7F;">
+ETAPA 02
+</div>
+<div class="step-header" style="color: #00FF7F;">
+Exploración Inicial
+</div>
+<p>
+Estructura general del dataset: nombres de columnas, tipos y una muestra de registros.
+</p>
+<div id="953a1738" class="cell" data-execution_count="4">
+<div class="cell-output cell-output-stdout">
+<pre><code>Columnas:
+- Codigo_Proceso
+- Entidad_Procesos_Todos
+- Monto_Proceso
+- Fecha_Publicacion_Proceso
+- Fecha_Adjudicacion_Proceso
+- Objeto_Procesos_Todos
+- Estado_Procesos_Todos
+- Codigo_NCO
+- Entidad_Necesidades
+- Fecha_Publicacion_NCO
+- Fecha_Entrega_Proforma_NCO
+- Descripcion_Necesidad
+- Estado_Necesidad
+- Estado_Coincidencia
+- Porcentaje_Similaridad
+- Index_En_NCO
+- Ciudad
+- Provincia
+- URL_Procesos_Todos
+- URL_Necesidades_Contratacion
+\nTipos de datos:
+Codigo_Proceso                   object
+Entidad_Procesos_Todos           object
+Monto_Proceso                   float64
+Fecha_Publicacion_Proceso        object
+Fecha_Adjudicacion_Proceso       object
+Objeto_Procesos_Todos            object
+Estado_Procesos_Todos            object
+Codigo_NCO                       object
+Entidad_Necesidades              object
+Fecha_Publicacion_NCO            object
+Fecha_Entrega_Proforma_NCO       object
+Descripcion_Necesidad            object
+Estado_Necesidad                 object
+Estado_Coincidencia              object
+Porcentaje_Similaridad          float64
+Index_En_NCO                      int64
+Ciudad                           object
+Provincia                        object
+URL_Procesos_Todos               object
+URL_Necesidades_Contratacion     object
+dtype: object
+\nDimensiones: (38997, 20)</code></pre>
+</div>
+</div>
+<div id="d0f8a6d2" class="cell" data-execution_count="5">
+<div class="cell-output cell-output-display">
+<div>
+
+
+<table class="dataframe caption-top table table-sm table-striped small" data-border="1">
+<thead>
+<tr class="header">
+<th data-quarto-table-cell-role="th"></th>
+<th data-quarto-table-cell-role="th">Codigo_Proceso</th>
+<th data-quarto-table-cell-role="th">Entidad_Procesos_Todos</th>
+<th data-quarto-table-cell-role="th">Monto_Proceso</th>
+<th data-quarto-table-cell-role="th">Fecha_Publicacion_Proceso</th>
+<th data-quarto-table-cell-role="th">Fecha_Adjudicacion_Proceso</th>
+<th data-quarto-table-cell-role="th">Objeto_Procesos_Todos</th>
+<th data-quarto-table-cell-role="th">Estado_Procesos_Todos</th>
+<th data-quarto-table-cell-role="th">Codigo_NCO</th>
+<th data-quarto-table-cell-role="th">Entidad_Necesidades</th>
+<th data-quarto-table-cell-role="th">Fecha_Publicacion_NCO</th>
+<th data-quarto-table-cell-role="th">Fecha_Entrega_Proforma_NCO</th>
+<th data-quarto-table-cell-role="th">Descripcion_Necesidad</th>
+<th data-quarto-table-cell-role="th">Estado_Necesidad</th>
+<th data-quarto-table-cell-role="th">Estado_Coincidencia</th>
+<th data-quarto-table-cell-role="th">Porcentaje_Similaridad</th>
+<th data-quarto-table-cell-role="th">Index_En_NCO</th>
+<th data-quarto-table-cell-role="th">Ciudad</th>
+<th data-quarto-table-cell-role="th">Provincia</th>
+<th data-quarto-table-cell-role="th">URL_Procesos_Todos</th>
+<th data-quarto-table-cell-role="th">URL_Necesidades_Contratacion</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<th data-quarto-table-cell-role="th">0</th>
+<td>COTO-GADMCY-2025-002</td>
+<td>GOBIERNO AUTONOMO DESCENTRALIZADO MUNICIPAL DE...</td>
+<td>333548.98</td>
+<td>2025-06-30 20:00:00</td>
+<td>2025-07-22 17:00:00</td>
+<td>CONSTRUCCION Y AMPLIACION DEL SISTEMA DE ALCAN...</td>
+<td>Ejecución de Contrato</td>
+<td>NIC-1960000540001-2025-00023</td>
+<td>GOBIERNO AUTONOMO DESCENTRALIZADO MUNICIPAL DE...</td>
+<td>2025-05-21 12:30:00</td>
+<td>2025-05-26 08:00:00</td>
+<td>ADQUISICIÓN DE HERRAMIENTAS Y EQUIPOS MENORES ...</td>
+<td>Finalizada</td>
+<td>Match Confiable</td>
+<td>88.30</td>
+<td>224323</td>
+<td>YACUAMBI</td>
+<td>ZAMORA CHINCHIPE</td>
+<td>https://www.compraspublicas.gob.ec/ProcesoCont...</td>
+<td>https://www.compraspublicas.gob.ec/ProcesoCont...</td>
+</tr>
+<tr class="even">
+<th data-quarto-table-cell-role="th">1</th>
+<td>COTS-CNELEP-2025-047</td>
+<td>EMPRESA ELÉCTRICA PÚBLICA ESTRATÉGICA CORPORAC...</td>
+<td>252646.39</td>
+<td>2025-06-30 20:00:00</td>
+<td>2025-07-31 12:00:00</td>
+<td>BOL SERVICIO DE MANTENIMIENTO DE VEHICULOS INC...</td>
+<td>Ejecución de Contrato</td>
+<td>NC-0968599020001-2025-00167</td>
+<td>EMPRESA ELÉCTRICA PÚBLICA ESTRATÉGICA CORPORAC...</td>
+<td>2025-05-13 09:00:00</td>
+<td>2025-05-15 08:42:00</td>
+<td>BOL SERVICIO DE MANTENIMIENTO DE VEHICULOS INC...</td>
+<td>Finalizada</td>
+<td>Match Confiable</td>
+<td>100.00</td>
+<td>96992</td>
+<td>GUAYAQUIL</td>
+<td>GUAYAS</td>
+<td>https://www.compraspublicas.gob.ec/ProcesoCont...</td>
+<td>https://www.compraspublicas.gob.ec/ProcesoCont...</td>
+</tr>
+<tr class="odd">
+<th data-quarto-table-cell-role="th">2</th>
+<td>COTS-CNT-2025-6649</td>
+<td>CORPORACION NACIONAL DE TELECOMUNICACIONES</td>
+<td>397920.00</td>
+<td>2025-06-30 20:00:00</td>
+<td>2025-08-15 20:00:00</td>
+<td>MANTENIMIENTO CORRECTIVO PARA GRUPOS ELECTRÓGE...</td>
+<td>Ejecución de Contrato</td>
+<td>NC-1768152560001-2025-00027</td>
+<td>CORPORACION NACIONAL DE TELECOMUNICACIONES</td>
+<td>2025-01-29 16:30:00</td>
+<td>2025-02-03 20:30:00</td>
+<td>MANTENIMIENTO CORRECTIVO PARA GRUPOS ELECTRÓGE...</td>
+<td>Finalizada</td>
+<td>Match Confiable</td>
+<td>100.00</td>
+<td>118788</td>
+<td>DISTRITO METROPOLITANO DE QUITO</td>
+<td>PICHINCHA</td>
+<td>https://www.compraspublicas.gob.ec/ProcesoCont...</td>
+<td>https://www.compraspublicas.gob.ec/ProcesoCont...</td>
+</tr>
+<tr class="even">
+<th data-quarto-table-cell-role="th">3</th>
+<td>FI-MDMQ-2025-7044</td>
+<td>GOBIERNO AUTONOMO DESCENTRALIZADO DEL DISTRITO...</td>
+<td>7794.55</td>
+<td>2025-06-30 20:00:00</td>
+<td>NaN</td>
+<td>ADQUISICION DE MATERIALES DIDACTICOS PARA LA E...</td>
+<td>Finalizada</td>
+<td>NC-1760003410001-2025-00248</td>
+<td>GOBIERNO AUTONOMO DESCENTRALIZADO DEL DISTRITO...</td>
+<td>2025-03-18 17:00:00</td>
+<td>2025-03-20 17:00:00</td>
+<td>ADQUISICIÓN DE MATERIAL DIDÁCTICO PARA LA EJEC...</td>
+<td>Finalizada</td>
+<td>Match Confiable</td>
+<td>96.11</td>
+<td>103832</td>
+<td>DISTRITO METROPOLITANO DE QUITO</td>
+<td>PICHINCHA</td>
+<td>https://www.compraspublicas.gob.ec/ProcesoCont...</td>
+<td>https://www.compraspublicas.gob.ec/ProcesoCont...</td>
+</tr>
+<tr class="odd">
+<th data-quarto-table-cell-role="th">4</th>
+<td>MCO-GADMCGP-2025-004</td>
+<td>GOBIERNO AUTÓNOMO DESCENTRALIZADO MUNICIPAL DE...</td>
+<td>22809.17</td>
+<td>2025-06-30 20:00:00</td>
+<td>2025-07-23 10:00:00</td>
+<td>CONSTRUCCIÓN DE BATERÍA SANITARIA EN LA ESCUEL...</td>
+<td>Ejecución de Contrato</td>
+<td>NC-1560001240001-2024-00037</td>
+<td>GOBIERNO AUTÓNOMO DESCENTRALIZADO MUNICIPAL DE...</td>
+<td>2024-11-05 07:30:00</td>
+<td>2024-11-07 10:00:00</td>
+<td>ADQUISICIÓN DE EQUIPOS DE PROTECCIÓN PERSONAL ...</td>
+<td>Finalizada</td>
+<td>Match Confiable</td>
+<td>86.65</td>
+<td>41463</td>
+<td>GONZALO PIZARRO</td>
+<td>SUCUMBIOS</td>
+<td>https://www.compraspublicas.gob.ec/ProcesoCont...</td>
+<td>https://www.compraspublicas.gob.ec/ProcesoCont...</td>
+</tr>
+</tbody>
+</table>
+
+</div>
+</div>
+</div>
+<div id="19cde1e1" class="cell" data-execution_count="6">
+<div class="cell-output cell-output-stdout">
+<pre><code>Procesos únicos: 38997
+NCO no nulos: 38418
+\nEstados de coincidencia:
+Estado_Coincidencia
+Match Confiable                 36723
+Match Potencial                  1695
+Sin coincidencia real en NCO      579
+Name: count, dtype: int64</code></pre>
+</div>
+</div>
+</div>
+<div class="step-card" style="border-left-color: #FF00FF;">
+<div class="step-num" style="color: #FF00FF; border-color: #FF00FF;">
+ETAPA 03
+</div>
+<div class="step-header" style="color: #FF00FF;">
+Manejo de Valores Faltantes
+</div>
+<p>
+Los faltantes se revisan en las variables críticas de emparejamiento, fechas y montos. No se imputan valores en campos sin importanciadebido a que esto marca la ausencia de match que puede ser proc¿vocado por falta de datos después del scraping.
+</p>
+<div id="b29be3d8" class="cell" data-execution_count="7">
+<div class="cell-output cell-output-stdout">
+<pre><code>Fecha_Adjudicacion_Proceso      3125
+Fecha_Entrega_Proforma_NCO       580
+Codigo_NCO                       579
+Entidad_Necesidades              579
+Fecha_Publicacion_NCO            579
+Descripcion_Necesidad            579
+URL_Necesidades_Contratacion     579
+Estado_Necesidad                 579
+Monto_Proceso                      4
+dtype: int64</code></pre>
+</div>
+</div>
+<div id="74e93a35" class="cell" data-execution_count="8">
+<div class="cell-output cell-output-stdout">
+<pre><code>Codigo_NCO                     579
+Fecha_Publicacion_Proceso        0
+Fecha_Adjudicacion_Proceso    3125
+Fecha_Publicacion_NCO          579
+Fecha_Entrega_Proforma_NCO     580
+Monto_Proceso                    4
+Porcentaje_Similaridad           0
+dtype: int64</code></pre>
+</div>
+</div>
+<div class="justification-box">
+<p>Un <span class="highlight-pink">Código_NCO nulo</span> se interpreta como ausencia de match válido. Las fechas y los montos faltantes se mantienen sin imputación para no introducir información artificial en el análisis.</p>
+</div>
+</div>
+<div class="step-card" style="border-left-color: #FFA500;">
+<div class="step-num" style="color: #FFA500; border-color: #FFA500;">
+ETAPA 04
+</div>
+<div class="step-header" style="color: #FFA500;">
+Transformaciones y Variables Analíticas
+</div>
+<p>
+Se crean variables auxiliares para facilitar el análisis descriptivo y visual. Las columnas originales se preservan y las transformaciones se hacen en una copia de trabajo.
+</p>
+<div id="9debfe64" class="cell" data-execution_count="9">
+<div class="cell-output cell-output-stdout">
+<pre><code>   Monto_Proceso  Porcentaje_Similaridad  tiene_match  match_confiable  \
+0      333548.98                   88.30         True             True   
+1      252646.39                  100.00         True             True   
+2      397920.00                  100.00         True             True   
+3        7794.55                   96.11         True             True   
+4       22809.17                   86.65         True             True   
+
+   cambio_textual tipo_contratacion  anio_proceso  mes_proceso  \
+0           11.70              COTO          2025            6   
+1            0.00              COTS          2025            6   
+2            0.00              COTS          2025            6   
+3            3.89                FI          2025            6   
+4           13.35               MCO          2025            6   
+
+   dias_entre_nco_y_proceso  
+0                      40.0  
+1                      48.0  
+2                     152.0  
+3                     104.0  
+4                     237.0  </code></pre>
+</div>
+</div>
+<div id="b2b40430" class="cell" data-execution_count="10">
+<div class="cell-output cell-output-stdout">
+<pre><code>Duplicados Codigo_Proceso: 0
+Duplicados Codigo_NCO en matches: 0</code></pre>
+</div>
+</div>
+<div class="justification-box">
+<p>La variable <span class="highlight-green">cambio_textual</span> se define como <span class="highlight-cyan">100 - Porcentaje_Similaridad</span> porque es más interpretable para rankings y mapas de calor. También se extrae <span class="highlight-cyan">tipo_contratación</span> para comparar modalidades de compra.</p>
+</div>
+</div>
+<div class="step-card" style="border-left-color: #00FFFF;">
+<div class="step-num" style="color: #00FFFF; border-color: #00FFFF;">
+ETAPA 05
+</div>
+<div class="step-header" style="color: #00FFFF;">
+Filtrado y Selección de Datos
+</div>
+<p>
+Se distinguen dos universos analíticos: cobertura total del sistema y subconjunto útil para analizar el cambio textual entre la necesidad y el proceso.
+</p>
+<div id="6db4d83b" class="cell" data-execution_count="11">
+<div class="cell-output cell-output-stdout">
+<pre><code>Total procesos 2025: 38,997
+Procesos con match: 38,418
+Procesos para análisis visual (similitud &gt;= 75): 38,418
+
+Estado_Coincidencia en dataset visual:
+Estado_Coincidencia
+Match Confiable    36723
+Match Potencial     1695
+Name: count, dtype: int64</code></pre>
+</div>
+</div>
+<div id="564672a0" class="cell" data-execution_count="12">
+<div class="cell-output cell-output-display" data-execution_count="12">
+
+<style>
+  #altair-viz-820b0a8c84d84bc1a4cfc31c595b0064.vega-embed {
+    width: 100%;
+    display: flex;
+  }
+
+  #altair-viz-820b0a8c84d84bc1a4cfc31c595b0064.vega-embed details,
+  #altair-viz-820b0a8c84d84bc1a4cfc31c595b0064.vega-embed details summary {
+    position: relative;
+  }
+</style>
+<div id="altair-viz-820b0a8c84d84bc1a4cfc31c595b0064"></div>
+<script type="text/javascript">
+  var VEGA_DEBUG = (typeof VEGA_DEBUG == "undefined") ? {} : VEGA_DEBUG;
+  (function(spec, embedOpt){
+    let outputDiv = document.currentScript.previousElementSibling;
+    if (outputDiv.id !== "altair-viz-820b0a8c84d84bc1a4cfc31c595b0064") {
+      outputDiv = document.getElementById("altair-viz-820b0a8c84d84bc1a4cfc31c595b0064");
+    }
+
+    const paths = {
+      "vega": "https://cdn.jsdelivr.net/npm/vega@5?noext",
+      "vega-lib": "https://cdn.jsdelivr.net/npm/vega-lib?noext",
+      "vega-lite": "https://cdn.jsdelivr.net/npm/vega-lite@5.20.1?noext",
+      "vega-embed": "https://cdn.jsdelivr.net/npm/vega-embed@6?noext",
+    };
+
+    function maybeLoadScript(lib, version) {
+      var key = `${lib.replace("-", "")}_version`;
+      return (VEGA_DEBUG[key] == version) ?
+        Promise.resolve(paths[lib]) :
+        new Promise(function(resolve, reject) {
+          var s = document.createElement('script');
+          document.getElementsByTagName("head")[0].appendChild(s);
+          s.async = true;
+          s.onload = () => {
+            VEGA_DEBUG[key] = version;
+            return resolve(paths[lib]);
+          };
+          s.onerror = () => reject(`Error loading script: ${paths[lib]}`);
+          s.src = paths[lib];
+        });
+    }
+
+    function showError(err) {
+      outputDiv.innerHTML = `<div class="error" style="color:red;">${err}</div>`;
+      throw err;
+    }
+
+    function displayChart(vegaEmbed) {
+      vegaEmbed(outputDiv, spec, embedOpt)
+        .catch(err => showError(`Javascript Error: ${err.message}<br>This usually means there's a typo in your chart specification. See the javascript console for the full traceback.`));
+    }
+
+    if(typeof define === "function" && define.amd) {
+      requirejs.config({paths});
+      let deps = ["vega-embed"];
+      require(deps, displayChart, err => showError(`Error loading script: ${err.message}`));
+    } else {
+      maybeLoadScript("vega", "5")
+        .then(() => maybeLoadScript("vega-lite", "5.20.1"))
+        .then(() => maybeLoadScript("vega-embed", "6"))
+        .catch(showError)
+        .then(() => displayChart(vegaEmbed));
+    }
+  })({"config": {"view": {"continuousWidth": 300, "continuousHeight": 300, "strokeOpacity": 0}, "axis": {"domainColor": "#00FFFF", "domainWidth": 1.5, "gridColor": "#1a1a1a", "labelColor": "#eff5f5ff", "labelFont": "Courier New, monospace", "labelFontSize": 10, "tickColor": "#00FFFF", "titleColor": "#00FFFF", "titleFont": "Courier New, monospace", "titleFontSize": 12}, "background": "#0C0C0C", "header": {"labelColor": "#00FFFF", "labelFont": "Courier New, monospace", "titleColor": "#00FFFF", "titleFont": "Courier New, monospace"}, "legend": {"labelColor": "#EAF4FF", "labelFont": "Courier New, monospace", "titleColor": "#00FFFF", "titleFont": "Courier New, monospace"}, "mark": {"color": "#eff5f5ff", "filled": true, "stroke": "#00FFFF"}, "title": {"anchor": "start", "color": "#EAF4FF", "font": "Courier New, monospace", "fontSize": 16, "offset": 20}}, "layer": [{"mark": {"type": "bar", "cornerRadiusTopLeft": 18, "cornerRadiusTopRight": 18, "opacity": 0.22, "size": 105, "strokeWidth": 2}, "encoding": {"color": {"field": "etapa", "legend": null, "scale": {"domain": ["Procesos 2025", "Con match"], "range": ["#00F5FF", "#00FF7F"]}, "type": "nominal"}, "stroke": {"field": "etapa", "legend": null, "scale": {"domain": ["Procesos 2025", "Con match"], "range": ["#00F5FF", "#00FF7F", "#FF4FD8"]}, "type": "nominal"}, "tooltip": [{"field": "etapa", "title": "Etapa", "type": "nominal"}, {"field": "total", "format": ",", "title": "Total", "type": "quantitative"}], "x": {"axis": {"labelAngle": 0}, "field": "etapa", "title": "", "type": "nominal"}, "y": {"field": "total", "scale": {"domainMin": 0}, "title": "N\u00famero de registros", "type": "quantitative"}}}, {"mark": {"type": "bar", "cornerRadiusTopLeft": 14, "cornerRadiusTopRight": 14, "opacity": 0.7, "size": 95, "strokeWidth": 1.5}, "encoding": {"color": {"field": "etapa", "legend": null, "scale": {"domain": ["Procesos 2025", "Con match"], "range": ["#00F5FF", "#00FF7F"]}, "type": "nominal"}, "stroke": {"field": "etapa", "legend": null, "scale": {"domain": ["Procesos 2025", "Con match"], "range": ["#00F5FF", "#00FF7F", "#FF4FD8"]}, "type": "nominal"}, "tooltip": [{"field": "etapa", "title": "Etapa", "type": "nominal"}, {"field": "total", "format": ",", "title": "Total", "type": "quantitative"}], "x": {"axis": {"labelAngle": 0}, "field": "etapa", "title": "", "type": "nominal"}, "y": {"field": "total", "scale": {"domainMin": 0}, "title": "N\u00famero de registros", "type": "quantitative"}}}, {"mark": {"type": "text", "color": "#EAF4FF", "dy": -10, "fontSize": 12}, "encoding": {"text": {"field": "total", "format": ",", "type": "quantitative"}, "x": {"field": "etapa", "type": "nominal"}, "y": {"field": "total", "type": "quantitative"}}}], "data": {"name": "data-fdc2dc1b84cd3f23a748436c89ff5b8e"}, "height": 340, "title": "Embudo de selecci\u00f3n anal\u00edtica", "width": 620, "$schema": "https://vega.github.io/schema/vega-lite/v5.20.1.json", "datasets": {"data-fdc2dc1b84cd3f23a748436c89ff5b8e": [{"etapa": "Procesos 2025", "total": 38997}, {"etapa": "Con match", "total": 38418}]}}, {"renderer": "canvas", "actions": false, "mode": "vega-lite"});
+</script>
+</div>
+</div>
+<div class="warning-box">
+<p><b>Nota:</b> Para medir cobertura institucional se conserva el dataset completo de procesos 2025. Para medir el cambio textual solo se usan casos con match real y similitud suficiente para evitar comparaciones espurias.</p>
+</div>
+</div>
+<div class="step-card page-columns page-full" style="border-left-color: #FFFFFF;">
+<div class="step-num" style="color: #FFFFFF; border-color: #FFFFFF;">
+ETAPA 06
+</div>
+<div class="step-header" style="color: #FFFFFF;">
+Exploración de Texto
+</div>
+<p>
+Como exploración complementaria, se pueden revisar los términos más frecuentes en las descripciones de necesidad. Esto ayuda a identificar el vocabulario dominante del corpus antes de construir visualizaciones más explicativas.
+</p>
+<div id="3be39f91" class="cell" data-execution_count="13">
+<div class="cell-output cell-output-stdout">
+<pre><code>          palabra  frecuencia
+0     adquisicion       18293
+1        servicio       11255
+2    contratacion        6737
+3   mantenimiento        5918
+4          canton        5202
+5         equipos        3147
+6        hospital        2911
+7      materiales        2482
+8       municipal        2468
+9            2025        2453
+10      vehiculos        2244
+11     correctivo        2141
+12      parroquia        2109
+13     preventivo        2049
+14        general        2034</code></pre>
+</div>
+</div>
+<div id="121287b7" class="cell" data-execution_count="14">
+<div class="cell-output cell-output-display" data-execution_count="14">
+
+<style>
+  #altair-viz-760b3223f51e445abece61b72e2453e3.vega-embed {
+    width: 100%;
+    display: flex;
+  }
+
+  #altair-viz-760b3223f51e445abece61b72e2453e3.vega-embed details,
+  #altair-viz-760b3223f51e445abece61b72e2453e3.vega-embed details summary {
+    position: relative;
+  }
+</style>
+<div id="altair-viz-760b3223f51e445abece61b72e2453e3"></div>
+<script type="text/javascript">
+  var VEGA_DEBUG = (typeof VEGA_DEBUG == "undefined") ? {} : VEGA_DEBUG;
+  (function(spec, embedOpt){
+    let outputDiv = document.currentScript.previousElementSibling;
+    if (outputDiv.id !== "altair-viz-760b3223f51e445abece61b72e2453e3") {
+      outputDiv = document.getElementById("altair-viz-760b3223f51e445abece61b72e2453e3");
+    }
+
+    const paths = {
+      "vega": "https://cdn.jsdelivr.net/npm/vega@5?noext",
+      "vega-lib": "https://cdn.jsdelivr.net/npm/vega-lib?noext",
+      "vega-lite": "https://cdn.jsdelivr.net/npm/vega-lite@5.20.1?noext",
+      "vega-embed": "https://cdn.jsdelivr.net/npm/vega-embed@6?noext",
+    };
+
+    function maybeLoadScript(lib, version) {
+      var key = `${lib.replace("-", "")}_version`;
+      return (VEGA_DEBUG[key] == version) ?
+        Promise.resolve(paths[lib]) :
+        new Promise(function(resolve, reject) {
+          var s = document.createElement('script');
+          document.getElementsByTagName("head")[0].appendChild(s);
+          s.async = true;
+          s.onload = () => {
+            VEGA_DEBUG[key] = version;
+            return resolve(paths[lib]);
+          };
+          s.onerror = () => reject(`Error loading script: ${paths[lib]}`);
+          s.src = paths[lib];
+        });
+    }
+
+    function showError(err) {
+      outputDiv.innerHTML = `<div class="error" style="color:red;">${err}</div>`;
+      throw err;
+    }
+
+    function displayChart(vegaEmbed) {
+      vegaEmbed(outputDiv, spec, embedOpt)
+        .catch(err => showError(`Javascript Error: ${err.message}<br>This usually means there's a typo in your chart specification. See the javascript console for the full traceback.`));
+    }
+
+    if(typeof define === "function" && define.amd) {
+      requirejs.config({paths});
+      let deps = ["vega-embed"];
+      require(deps, displayChart, err => showError(`Error loading script: ${err.message}`));
+    } else {
+      maybeLoadScript("vega", "5")
+        .then(() => maybeLoadScript("vega-lite", "5.20.1"))
+        .then(() => maybeLoadScript("vega-embed", "6"))
+        .catch(showError)
+        .then(() => displayChart(vegaEmbed));
+    }
+  })({"config": {"view": {"continuousWidth": 300, "continuousHeight": 300, "strokeOpacity": 0}, "axis": {"domainColor": "#00FFFF", "domainWidth": 1.5, "gridColor": "#1a1a1a", "labelColor": "#eff5f5ff", "labelFont": "Courier New, monospace", "labelFontSize": 10, "tickColor": "#00FFFF", "titleColor": "#00FFFF", "titleFont": "Courier New, monospace", "titleFontSize": 12}, "background": "#0C0C0C", "header": {"labelColor": "#00FFFF", "labelFont": "Courier New, monospace", "titleColor": "#00FFFF", "titleFont": "Courier New, monospace"}, "legend": {"labelColor": "#EAF4FF", "labelFont": "Courier New, monospace", "titleColor": "#00FFFF", "titleFont": "Courier New, monospace"}, "mark": {"color": "#eff5f5ff", "filled": true, "stroke": "#00FFFF"}, "title": {"anchor": "start", "color": "#EAF4FF", "font": "Courier New, monospace", "fontSize": 16, "offset": 20}}, "layer": [{"mark": {"type": "bar", "color": "#00FF7F", "cornerRadiusBottomRight": 8, "cornerRadiusTopRight": 8, "opacity": 0.6, "size": 22, "stroke": "#f0f4f4ff", "strokeWidth": 1.2}, "encoding": {"tooltip": [{"field": "palabra", "title": "Palabra", "type": "nominal"}, {"field": "frecuencia", "format": ",", "title": "Frecuencia", "type": "quantitative"}], "x": {"field": "frecuencia", "scale": {"domainMin": 0}, "title": "Frecuencia", "type": "quantitative"}, "y": {"field": "palabra", "sort": ["adquisicion", "servicio", "contratacion", "mantenimiento", "canton", "equipos", "hospital", "materiales", "municipal", "2025", "vehiculos", "correctivo", "parroquia", "preventivo", "general"], "title": "", "type": "nominal"}}}, {"mark": {"type": "text", "align": "left", "color": "#EAF4FF", "dx": 6, "fontSize": 11}, "encoding": {"text": {"field": "frecuencia", "format": ",", "type": "quantitative"}, "x": {"field": "frecuencia", "type": "quantitative"}, "y": {"field": "palabra", "sort": ["adquisicion", "servicio", "contratacion", "mantenimiento", "canton", "equipos", "hospital", "materiales", "municipal", "2025", "vehiculos", "correctivo", "parroquia", "preventivo", "general"], "type": "nominal"}}}], "data": {"name": "data-d4dfa01c2d9abf4711860dd9149674a5"}, "height": 420, "title": "T\u00e9rminos frecuentes en las necesidades con match", "width": 720, "$schema": "https://vega.github.io/schema/vega-lite/v5.20.1.json", "datasets": {"data-d4dfa01c2d9abf4711860dd9149674a5": [{"palabra": "adquisicion", "frecuencia": 18293}, {"palabra": "servicio", "frecuencia": 11255}, {"palabra": "contratacion", "frecuencia": 6737}, {"palabra": "mantenimiento", "frecuencia": 5918}, {"palabra": "canton", "frecuencia": 5202}, {"palabra": "equipos", "frecuencia": 3147}, {"palabra": "hospital", "frecuencia": 2911}, {"palabra": "materiales", "frecuencia": 2482}, {"palabra": "municipal", "frecuencia": 2468}, {"palabra": "2025", "frecuencia": 2453}, {"palabra": "vehiculos", "frecuencia": 2244}, {"palabra": "correctivo", "frecuencia": 2141}, {"palabra": "parroquia", "frecuencia": 2109}, {"palabra": "preventivo", "frecuencia": 2049}, {"palabra": "general", "frecuencia": 2034}]}}, {"renderer": "canvas", "actions": false, "mode": "vega-lite"});
+</script>
+</div>
+</div>
+<div id="b553d263" class="cell page-columns page-full" data-execution_count="15">
+<div class="cell-output cell-output-display page-columns page-full">
+<div class="page-columns page-full">
+<figure class="figure page-columns page-full">
+<p class="page-columns page-full"><img src="data_cleaning_files/figure-html/cell-16-output-1.png" width="1363" height="691" class="figure-img column-screen-inset"></p>
+</figure>
+</div>
+</div>
+</div>
+</div>
+<div class="step-card" style="border-left-color: #7CFC00;">
+<div class="step-num" style="color: #7CFC00; border-color: #7CFC00;">
+ETAPA 07
+</div>
+<div class="step-header" style="color: #7CFC00;">
+Justificación General
+</div>
+<p>
+La preparación de datos busca separar dos problemas distintos: <span class="highlight-cyan">cobertura del matching</span> y <span class="highlight-green">magnitud del cambio textual</span>. Por eso no se eliminan todos los no-match del dataset base, pero sí se filtran los casos más útiles para las visualizaciones explicativas.
+</p>
+<p>
+Las decisiones de conversión de tipos, conservación de nulos, creación de variables y filtrado por similitud mínima permiten que el análisis visual se construya sobre datos trazables, interpretables y consistentes con la lógica del emparejamiento entre procesos y necesidades.
+</p>
+</div>
+</div>
+
+
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp('/' + window.location.host + '/');
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+</div> <!-- /content -->
+
+
+
+
+</body></html>

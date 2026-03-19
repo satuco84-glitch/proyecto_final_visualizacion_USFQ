@@ -1,0 +1,614 @@
+---
+title: "Preparación de Datos"
+format:
+  html:
+    page-layout: full
+jupyter: python3
+---
+
+```{python}
+#| echo: false
+from IPython.display import HTML, display
+
+styles = """
+<style>
+    @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=JetBrains+Mono:wght@300;500&display=swap');
+
+    body {
+        background-color: #050505 !important;
+        color: #e0e0e0;
+        font-family: 'JetBrains Mono', monospace;
+    }
+
+    .audit-hero {
+        background: linear-gradient(180deg, rgba(0, 255, 255, 0.06) 0%, rgba(0, 0, 0, 0) 100%);
+        padding: 44px 20px;
+        text-align: center;
+        border-bottom: 1px solid #00FFFF;
+        margin-bottom: 36px;
+        box-shadow: 0 10px 30px rgba(0, 255, 255, 0.08);
+    }
+
+    .audit-title {
+        font-family: 'Orbitron', sans-serif;
+        font-size: 2.5rem;
+        color: #00FFFF;
+        text-transform: uppercase;
+        letter-spacing: 3px;
+        text-shadow: 0 0 15px rgba(0, 255, 255, 0.45);
+        margin-bottom: 12px;
+    }
+
+    .audit-subtitle {
+        max-width: 980px;
+        margin: 0 auto;
+        color: #c7ffff;
+        line-height: 1.7;
+    }
+
+    .step-card {
+        background: #0C0C0C;
+        border: 1px solid #333;
+        border-left: 4px solid #00FFFF;
+        padding: 2.2rem;
+        margin-bottom: 2.5rem;
+        border-radius: 6px;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.45);
+    }
+
+    .step-num {
+        font-family: 'Orbitron', sans-serif;
+        color: #00FF7F;
+        font-size: 0.8rem;
+        border: 1px solid #00FF7F;
+        display: inline-block;
+        padding: 3px 10px;
+        margin-bottom: 14px;
+        letter-spacing: 2px;
+    }
+
+    .step-header {
+        font-family: 'Orbitron', sans-serif;
+        color: #00FFFF;
+        font-size: 1.45rem;
+        margin-bottom: 18px;
+        text-transform: uppercase;
+    }
+
+    .justification-box {
+        background: rgba(0, 255, 127, 0.06);
+        border: 1px dashed #00FF7F;
+        padding: 15px;
+        margin-top: 20px;
+        font-size: 0.94rem;
+        line-height: 1.6;
+    }
+
+    .warning-box {
+        background: rgba(255, 170, 0, 0.06);
+        border: 1px dashed #FFA500;
+        padding: 15px;
+        margin-top: 20px;
+        font-size: 0.94rem;
+        line-height: 1.6;
+    }
+
+    .highlight-cyan { color: #00FFFF; font-weight: bold; }
+    .highlight-green { color: #00FF7F; font-weight: bold; }
+    .highlight-pink { color: #FF00FF; font-weight: bold; }
+
+    .cell-output pre,
+    .cell-output-stdout pre,
+    .cell-output-display,
+    .cell-output-display pre {
+        background: #0C0C0C !important;
+        color: #E0E0E0 !important;
+        border: 1px solid #333 !important;
+        border-left: 3px solid #00FFFF !important;
+    }
+
+    .cell-output table,
+    .cell-output-display table {
+        color: #E0E0E0 !important;
+        background-color: #0C0C0C !important;
+    }
+
+    .cell-output th,
+    .cell-output td,
+    .cell-output-display th,
+    .cell-output-display td {
+        color: #E0E0E0 !important;
+        background-color: #0C0C0C !important;
+        border-color: #333 !important;
+    }
+</style>
+"""
+
+display(HTML(styles))
+```
+
+::: {.audit-hero}
+<h1 class="audit-title">Preparación y Limpieza de Datos</h1>
+<p class="audit-subtitle">
+Este documento resume cómo se preparó el dataset final antes del análisis visual. El objetivo es dejar explícitas las decisiones técnicas sobre carga, validación, tratamiento de nulos, transformaciones analíticas y filtros aplicados sobre <span class="highlight-cyan">resultados_matcher3_v3.csv</span>.
+</p>
+:::
+
+```{python}
+#| echo: false
+import os
+import re
+import unicodedata
+from collections import Counter
+
+import altair as alt
+import pandas as pd
+
+DATA_FILE = "resultados_matcher3_v3.csv"
+TRON_COLORS = ["#00F5FF", "#39FF14", "#FF4FD8", "#00FFB3", "#7DF9FF", "#B967FF"]
+TRON_BG = "#0C0C0C"
+TRON_AXIS = "#00FFFF"
+TRON_GRID = "#1a1a1a"
+TRON_TEXT = "#EAF4FF"
+TRON_LABEL = TRON_TEXT
+TRON_TITLE = TRON_TEXT
+
+alt.renderers.enable(
+    "html",
+    embed_options={"renderer": "canvas", "actions": False},
+)
+alt.data_transformers.disable_max_rows()
+
+STOPWORDS_ES = {
+    "de", "la", "el", "y", "en", "a", "los", "las", "del", "para", "con", "por",
+    "una", "un", "al", "se", "que", "su", "o", "lo", "como", "mas", "sin", "sobre",
+    "entre", "sus", "este", "esta", "es", "son", "ser", "ha", "han", "una", "uno"
+}
+
+def strip_accents(text):
+    if not isinstance(text, str):
+        return ""
+    return "".join(
+        ch for ch in unicodedata.normalize("NFKD", text)
+        if not unicodedata.combining(ch)
+    )
+
+def normalize_text(text):
+    if not isinstance(text, str):
+        return ""
+    text = strip_accents(text.lower())
+    text = re.sub(r"[^a-z0-9\s]", " ", text)
+    return re.sub(r"\s+", " ", text).strip()
+
+def extract_tipo_contratacion(codigo):
+    if not isinstance(codigo, str) or not codigo:
+        return ""
+    return codigo.split("-")[0].strip().upper()
+
+def tokenize_series(series):
+    tokens = []
+    for value in series.dropna():
+        clean = normalize_text(value)
+        parts = [w for w in clean.split() if len(w) >= 4 and w not in STOPWORDS_ES]
+        tokens.extend(parts)
+    return tokens
+
+def style_altair(chart):
+    return (
+        chart
+        .configure(background=TRON_BG)
+        .configure_view(strokeOpacity=0)
+        .configure_mark(filled=True, color="#eff5f5ff", stroke="#00FFFF")
+        .configure_title(
+            color=TRON_TITLE,
+            fontSize=16,
+            font="Courier New, monospace",
+            anchor="start",
+            offset=20,
+        )
+        .configure_axis(
+            gridColor=TRON_GRID,
+            domainColor=TRON_AXIS,
+            domainWidth=1.5,
+            tickColor=TRON_AXIS,
+            labelColor="#eff5f5ff",
+            titleColor=TRON_AXIS,
+            labelFont="Courier New, monospace",
+            titleFont="Courier New, monospace",
+            labelFontSize=10,
+            titleFontSize=12,
+        )
+        .configure_legend(
+            labelColor=TRON_LABEL,
+            titleColor=TRON_AXIS,
+            labelFont="Courier New, monospace",
+            titleFont="Courier New, monospace",
+        )
+        .configure_header(
+            labelColor=TRON_AXIS,
+            titleColor=TRON_AXIS,
+            labelFont="Courier New, monospace",
+            titleFont="Courier New, monospace",
+        )
+    )
+```
+
+::: {.column-screen-inset}
+
+<div class="step-card">
+<div class="step-num">ETAPA 01</div>
+<div class="step-header">Carga del Dataset</div>
+<p>
+Se trabaja con el archivo consolidado <span class="highlight-cyan">resultados_matcher3_v3.csv</span>, que contiene la salida del proceso de vinculación entre procesos formales de SERCOP y necesidades de contratación NCO.
+</p>
+
+```{python}
+#| echo: false
+if not os.path.exists(DATA_FILE):
+    raise FileNotFoundError(f"No se encontró el archivo {DATA_FILE}")
+
+df_raw = pd.read_csv(DATA_FILE)
+print(f"Dataset cargado: {DATA_FILE}")
+print(f"Filas: {len(df_raw):,}")
+print(f"Columnas: {len(df_raw.columns)}")
+```
+
+</div>
+
+<div class="step-card" style="border-left-color: #00FF7F;">
+<div class="step-num" style="color: #00FF7F; border-color: #00FF7F;">ETAPA 02</div>
+<div class="step-header" style="color: #00FF7F;">Exploración Inicial</div>
+<p>
+Estructura general del dataset: nombres de columnas, tipos y una muestra de registros.
+</p>
+
+```{python}
+#| echo: false
+print("Columnas:")
+for c in df_raw.columns:
+    print("-", c)
+
+print("\\nTipos de datos:")
+print(df_raw.dtypes)
+
+print("\\nDimensiones:", df_raw.shape)
+```
+
+```{python}
+#| echo: false
+display(df_raw.head(5))
+```
+
+```{python}
+#| echo: false
+print("Procesos únicos:", df_raw["Codigo_Proceso"].nunique())
+print("NCO no nulos:", df_raw["Codigo_NCO"].notna().sum())
+print("\\nEstados de coincidencia:")
+print(df_raw["Estado_Coincidencia"].value_counts(dropna=False))
+```
+
+</div>
+
+<div class="step-card" style="border-left-color: #FF00FF;">
+<div class="step-num" style="color: #FF00FF; border-color: #FF00FF;">ETAPA 03</div>
+<div class="step-header" style="color: #FF00FF;">Manejo de Valores Faltantes</div>
+<p>
+Los faltantes se revisan en las variables críticas de emparejamiento, fechas y montos. No se imputan valores en campos sin importanciadebido a que esto marca la ausencia de match que puede ser proc¿vocado por falta de datos después del scraping.
+</p>
+
+```{python}
+#| echo: false
+nulos = df_raw.isna().sum().sort_values(ascending=False)
+print(nulos[nulos > 0])
+```
+
+```{python}
+#| echo: false
+campos_clave = [
+    "Codigo_NCO",
+    "Fecha_Publicacion_Proceso",
+    "Fecha_Adjudicacion_Proceso",
+    "Fecha_Publicacion_NCO",
+    "Fecha_Entrega_Proforma_NCO",
+    "Monto_Proceso",
+    "Porcentaje_Similaridad",
+]
+print(df_raw[campos_clave].isna().sum())
+```
+
+<div class="justification-box">
+Un <span class="highlight-pink">Código_NCO nulo</span> se interpreta como ausencia de match válido. Las fechas y los montos faltantes se mantienen sin imputación para no introducir información artificial en el análisis.
+</div>
+</div>
+
+<div class="step-card" style="border-left-color: #FFA500;">
+<div class="step-num" style="color: #FFA500; border-color: #FFA500;">ETAPA 04</div>
+<div class="step-header" style="color: #FFA500;">Transformaciones y Variables Analíticas</div>
+<p>
+Se crean variables auxiliares para facilitar el análisis descriptivo y visual. Las columnas originales se preservan y las transformaciones se hacen en una copia de trabajo.
+</p>
+
+```{python}
+#| echo: false
+df = df_raw.copy()
+
+fecha_cols = [
+    "Fecha_Publicacion_Proceso",
+    "Fecha_Adjudicacion_Proceso",
+    "Fecha_Publicacion_NCO",
+    "Fecha_Entrega_Proforma_NCO",
+]
+for col in fecha_cols:
+    df[col] = pd.to_datetime(df[col], errors="coerce")
+
+df["Monto_Proceso"] = pd.to_numeric(df["Monto_Proceso"], errors="coerce")
+df["Porcentaje_Similaridad"] = pd.to_numeric(df["Porcentaje_Similaridad"], errors="coerce")
+
+df["tiene_match"] = df["Codigo_NCO"].notna()
+df["match_confiable"] = df["Estado_Coincidencia"].eq("Match Confiable")
+df["match_potencial"] = df["Estado_Coincidencia"].eq("Match Potencial")
+df["cambio_textual"] = 100 - df["Porcentaje_Similaridad"]
+df["tipo_contratacion"] = df["Codigo_Proceso"].apply(extract_tipo_contratacion)
+df["anio_proceso"] = df["Fecha_Publicacion_Proceso"].dt.year
+df["mes_proceso"] = df["Fecha_Publicacion_Proceso"].dt.month
+df["dias_entre_nco_y_proceso"] = (
+    df["Fecha_Publicacion_Proceso"] - df["Fecha_Publicacion_NCO"]
+).dt.days
+
+print(df[[
+    "Monto_Proceso",
+    "Porcentaje_Similaridad",
+    "tiene_match",
+    "match_confiable",
+    "cambio_textual",
+    "tipo_contratacion",
+    "anio_proceso",
+    "mes_proceso",
+    "dias_entre_nco_y_proceso"
+]].head())
+```
+
+```{python}
+#| echo: false
+duplicados_proceso = df["Codigo_Proceso"].duplicated().sum()
+duplicados_nco_match = df.loc[df["Codigo_NCO"].notna(), "Codigo_NCO"].duplicated().sum()
+print("Duplicados Codigo_Proceso:", duplicados_proceso)
+print("Duplicados Codigo_NCO en matches:", duplicados_nco_match)
+df.to_csv("resultado_final_2025.csv", index=False) 
+```
+
+<div class="justification-box">
+La variable <span class="highlight-green">cambio_textual</span> se define como <span class="highlight-cyan">100 - Porcentaje_Similaridad</span> porque es más interpretable para rankings y mapas de calor. También se extrae <span class="highlight-cyan">tipo_contratación</span> para comparar modalidades de compra.
+</div>
+</div>
+
+<div class="step-card" style="border-left-color: #00FFFF;">
+<div class="step-num" style="color: #00FFFF; border-color: #00FFFF;">ETAPA 05</div>
+<div class="step-header" style="color: #00FFFF;">Filtrado y Selección de Datos</div>
+<p>
+Se distinguen dos universos analíticos: cobertura total del sistema y subconjunto útil para analizar el cambio textual entre la necesidad y el proceso.
+</p>
+
+```{python}
+#| echo: false
+df_2025 = df[df["anio_proceso"] == 2025].copy()
+df_match = df_2025[df_2025["tiene_match"]].copy()
+df_visual = df_match[df_match["Porcentaje_Similaridad"] >= 75].copy()
+
+print(f"Total procesos 2025: {len(df_2025):,}")
+print(f"Procesos con match: {len(df_match):,}")
+print(f"Procesos para análisis visual (similitud >= 75): {len(df_visual):,}")
+print("\nEstado_Coincidencia en dataset visual:")
+print(df_visual["Estado_Coincidencia"].value_counts(dropna=False))
+```
+
+```{python}
+#| echo: false
+summary_df = pd.DataFrame(
+    {
+        "etapa": ["Procesos 2025", "Con match"],
+        "total": [len(df_2025), len(df_match)],
+    }
+)
+
+summary_base = alt.Chart(summary_df).encode(
+    x=alt.X("etapa:N", title="", axis=alt.Axis(labelAngle=0)),
+    y=alt.Y("total:Q", title="Número de registros", scale=alt.Scale(domainMin=0)),
+    color=alt.Color(
+        "etapa:N",
+        scale=alt.Scale(
+            domain=["Procesos 2025", "Con match"],
+            range=["#00F5FF", "#00FF7F"],
+        ),
+        legend=None,
+    ),
+    stroke=alt.Color(
+        "etapa:N",
+        scale=alt.Scale(
+            domain=["Procesos 2025", "Con match"],
+            range=["#00F5FF", "#00FF7F", "#FF4FD8"],
+        ),
+        legend=None,
+    ),
+    tooltip=[
+        alt.Tooltip("etapa:N", title="Etapa"),
+        alt.Tooltip("total:Q", title="Total", format=","),
+    ],
+)
+
+summary_glow = summary_base.mark_bar(
+    size=105,
+    opacity=0.22,
+    cornerRadiusTopLeft=18,
+    cornerRadiusTopRight=18,
+    strokeWidth=2,
+)
+
+summary_foreground = summary_base.mark_bar(
+    size=95,
+    opacity=0.7,
+    cornerRadiusTopLeft=14,
+    cornerRadiusTopRight=14,
+    strokeWidth=1.5,
+)
+
+summary_halo = summary_base.mark_bar(
+    size=92,
+    opacity=0.35,
+    cornerRadiusTopLeft=16,
+    cornerRadiusTopRight=16,
+    strokeWidth=1.8,
+)
+
+summary_text = alt.Chart(summary_df).mark_text(
+    dy=-10,
+    color=TRON_TEXT,
+    fontSize=12,
+).encode(
+    x=alt.X("etapa:N"),
+    y=alt.Y("total:Q"),
+    text=alt.Text("total:Q", format=","),
+)
+
+style_altair(
+    (summary_glow + summary_foreground + summary_text)
+    .properties(width=620, height=340, title="Embudo de selección analítica")
+)
+```
+
+<div class="warning-box">
+<b>Nota:</b> Para medir cobertura institucional se conserva el dataset completo de procesos 2025. Para medir el cambio textual solo se usan casos con match real y similitud suficiente para evitar comparaciones espurias.
+</div>
+</div>
+
+<div class="step-card" style="border-left-color: #FFFFFF;">
+<div class="step-num" style="color: #FFFFFF; border-color: #FFFFFF;">ETAPA 06</div>
+<div class="step-header" style="color: #FFFFFF;">Exploración de Texto</div>
+<p>
+Como exploración complementaria, se pueden revisar los términos más frecuentes en las descripciones de necesidad. Esto ayuda a identificar el vocabulario dominante del corpus antes de construir visualizaciones más explicativas.
+</p>
+
+```{python}
+#| echo: false
+tokens = tokenize_series(df_visual["Descripcion_Necesidad"])
+top_words = pd.DataFrame(Counter(tokens).most_common(15), columns=["palabra", "frecuencia"])
+print(top_words)
+```
+
+```{python}
+#| echo: false
+top_words_plot = top_words.copy()
+top_words_plot["palabra"] = pd.Categorical(
+    top_words_plot["palabra"],
+    categories=top_words_plot["palabra"].tolist()[::-1],
+    ordered=True,
+)
+
+words_base = alt.Chart(top_words_plot).encode(
+    y=alt.Y("palabra:N", sort=top_words_plot["palabra"].tolist(), title=""),
+    x=alt.X("frecuencia:Q", title="Frecuencia", scale=alt.Scale(domainMin=0)),
+    tooltip=[
+        alt.Tooltip("palabra:N", title="Palabra"),
+        alt.Tooltip("frecuencia:Q", title="Frecuencia", format=","),
+    ],
+)
+
+words_glow = words_base.mark_bar(
+    size=36,
+    color="#331499ff",
+    stroke="#b4abd8ff",
+    opacity=0.18,
+    cornerRadiusTopRight=10,
+    cornerRadiusBottomRight=10,
+    strokeWidth=1.8,
+)
+
+words_foreground = words_base.mark_bar(
+    size=22,
+    color="#00FF7F",
+    stroke="#f0f4f4ff",
+    opacity=0.6,
+    cornerRadiusTopRight=8,
+    cornerRadiusBottomRight=8,
+    strokeWidth=1.2,
+)
+
+words_halo = words_base.mark_bar(
+    size=28,
+    color="#00FFFF",
+    stroke="#00FFFF",
+    opacity=0.32,
+    cornerRadiusTopRight=9,
+    cornerRadiusBottomRight=9,
+    strokeWidth=1.5,
+)
+
+words_text = alt.Chart(top_words_plot).mark_text(
+    align="left",
+    dx=6,
+    color=TRON_TEXT,
+    fontSize=11,
+).encode(
+    y=alt.Y("palabra:N", sort=top_words_plot["palabra"].tolist()),
+    x=alt.X("frecuencia:Q"),
+    text=alt.Text("frecuencia:Q", format=","),
+)
+
+style_altair(
+    (words_foreground + words_text)
+    .properties(
+        width=720,
+        height=420,
+        title="Términos frecuentes en las necesidades con match",
+    )
+)
+```
+
+```{python}
+#| echo: false
+from wordcloud import WordCloud
+import matplotlib.pyplot as plt
+import random
+
+if len(tokens) == 0:
+    print("No hay tokens para generar la nube de palabras.")
+else:
+    neon_palette = ["#00F5FF", "#39FF14", "#FF4FD8", "#00FFB3", "#7DF9FF", "#B967FF"]
+
+    def neon_color_func(*args, **kwargs):
+        return random.choice(neon_palette)
+
+    wc = WordCloud(
+        width=1400,
+        height=700,
+        background_color="#0C0C0C",
+        stopwords=STOPWORDS_ES,
+        collocations=False,
+        max_words=180,
+    ).generate(" ".join(tokens))
+
+    wc = wc.recolor(color_func=neon_color_func)
+
+    plt.figure(figsize=(14, 7), facecolor="#0C0C0C")
+    plt.imshow(wc, interpolation="bilinear")
+    plt.axis("off")
+    plt.tight_layout(pad=0)
+    plt.show()
+
+```
+
+
+</div>
+
+<div class="step-card" style="border-left-color: #7CFC00;">
+<div class="step-num" style="color: #7CFC00; border-color: #7CFC00;">ETAPA 07</div>
+<div class="step-header" style="color: #7CFC00;">Justificación General</div>
+<p>
+La preparación de datos busca separar dos problemas distintos: <span class="highlight-cyan">cobertura del matching</span> y <span class="highlight-green">magnitud del cambio textual</span>. Por eso no se eliminan todos los no-match del dataset base, pero sí se filtran los casos más útiles para las visualizaciones explicativas.
+</p>
+<p>
+Las decisiones de conversión de tipos, conservación de nulos, creación de variables y filtrado por similitud mínima permiten que el análisis visual se construya sobre datos trazables, interpretables y consistentes con la lógica del emparejamiento entre procesos y necesidades.
+</p>
+</div>
+
+:::

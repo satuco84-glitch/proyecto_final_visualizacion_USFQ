@@ -1,0 +1,1626 @@
+---
+title: "Visualizaciones"
+format: html
+jupyter: python3
+execute:
+  echo: false
+  warning: false
+---
+
+```{python}
+import pandas as pd
+import altair as alt
+from IPython.display import display, HTML
+
+
+alt.renderers.enable("html")
+alt.data_transformers.disable_max_rows()
+
+MARKDOWN_TITLE_FONT = "Orbitron"
+BODY_FONT = "Arial"
+MARKDOWN_TITLE_COLOR = "#FF8C00"
+
+display(HTML(f"""
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;700;800&display=swap');
+body, p, li, table, .cell-output-display, .vega-embed, .cell-output, .quarto-container {{
+    font-family: '{BODY_FONT}', sans-serif !important;
+}}
+.quarto-title-block .title, main.content h1, main.content h2, main.content h3, main.content h4 {{
+    font-family: '{MARKDOWN_TITLE_FONT}', sans-serif !important;
+    color: {MARKDOWN_TITLE_COLOR} !important;
+}}
+</style>
+"""))
+
+# =========================
+# 1. Carga de datos
+# =========================
+nco = pd.read_csv("NCO.csv")
+res = pd.read_csv("resultado_final_2025.csv")
+procesos = pd.read_csv("procesos_todos_sercop_2025_1.csv") # Carga de la base de procesos formales
+
+# =========================
+# 2. Totales de las bases
+# =========================
+total_nco = nco["Codigo de Necesidad"].nunique()
+total_procesos = procesos["Codigo"].nunique()
+
+estado_prioridad = {
+    "Match Confiable": 2,
+    "Match Potencial": 1,
+    "Sin coincidencia real en NCO": 0
+}
+
+procesos_estado = res[["Codigo_Proceso", "Estado_Coincidencia"]].copy()
+procesos_estado["prioridad"] = (
+    procesos_estado["Estado_Coincidencia"].map(estado_prioridad).fillna(-1)
+)
+procesos_estado = (
+    procesos_estado
+    .sort_values(["Codigo_Proceso", "prioridad"], ascending=[True, False])
+    .drop_duplicates(subset="Codigo_Proceso", keep="first")
+)
+
+# =========================
+# 3. Filtrar solo matches confiables
+# =========================
+res_conf = res[res["Estado_Coincidencia"] == "Match Confiable"].copy()
+
+res_conf["Porcentaje_Similaridad"] = pd.to_numeric(
+    res_conf["Porcentaje_Similaridad"], errors="coerce"
+)
+
+res_best = (
+    res_conf
+    .sort_values(["Codigo_NCO", "Porcentaje_Similaridad"], ascending=[True, False])
+    .drop_duplicates(subset="Codigo_NCO", keep="first")
+    .copy()
+)
+
+nco_con_match = res_best["Codigo_NCO"].nunique()
+nco_sin_match = total_nco - nco_con_match
+porcentaje_match_nco = (nco_con_match / total_nco) * 100
+
+# Procesos que fueron identificados a través de NCO
+procesos_identificados_confiable = int(
+    (procesos_estado["Estado_Coincidencia"] == "Match Confiable").sum()
+)
+procesos_identificados_potencial = int(
+    (procesos_estado["Estado_Coincidencia"] == "Match Potencial").sum()
+)
+procesos_identificados = (
+    procesos_identificados_confiable + procesos_identificados_potencial
+)
+procesos_no_identificados = total_procesos - procesos_identificados
+porcentaje_identificacion_procesos = (procesos_identificados / total_procesos) * 100
+
+# =========================
+# 4. Agrupar estados finales
+# =========================
+def agrupar_estado(estado):
+    if pd.isna(estado):
+        return "Otros"
+
+    estado = str(estado).strip().lower()
+
+    if "adjudic" in estado or "contrat" in estado:
+        return "Adjudicado / Contratado"
+    elif "desiert" in estado:
+        return "Desierto"
+    elif "cancel" in estado:
+        return "Cancelado"
+    else:
+        return "Otros"
+
+res_best["estado_final_agrupado"] = res_best["Estado_Procesos_Todos"].apply(agrupar_estado)
+
+estado_counts = (
+    res_best["estado_final_agrupado"]
+    .value_counts()
+    .reindex(["Adjudicado / Contratado", "Desierto", "Cancelado", "Otros"], fill_value=0)
+    .reset_index()
+)
+
+estado_counts.columns = ["Estado", "Cantidad"]
+estado_counts["Porcentaje"] = (estado_counts["Cantidad"] / estado_counts["Cantidad"].sum()) * 100
+
+# =========================
+# 5. Tarjetas KPI (Tron Style)
+# =========================
+from IPython.display import HTML, display
+
+kpi_html = f"""
+<style>
+    .kpi-container {{
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 20px;
+        margin-bottom: 30px;
+        font-family: 'Arial', sans-serif;
+    }}
+    .kpi-card {{
+        background: #0C0C0C;
+        border: 1px solid #00FF7F;
+        border-radius: 10px;
+        padding: 20px;
+        text-align: center;
+        box-shadow: 0 0 10px rgba(0, 255, 127, 0.2);
+        transition: transform 0.3s ease;
+    }}
+    .kpi-card:hover {{
+        transform: translateY(-5px);
+        box-shadow: 0 0 20px rgba(0, 255, 127, 0.4);
+    }}
+    .kpi-card.purple {{
+        border-color: #00aaff;
+        box-shadow: 0 0 10px rgba(0, 170, 255, 0.2);
+    }}
+    .kpi-card.purple:hover {{
+        box-shadow: 0 0 20px rgba(0, 170, 255, 0.4);
+    }}
+    .kpi-title {{
+        color: #E0E0E0;
+        font-size: 0.8rem;
+        text-transform: uppercase;
+        margin-bottom: 10px;
+        letter-spacing: 1px;
+    }}
+    .kpi-value {{
+        color: #00FF7F;
+        font-size: 1.8rem;
+        font-weight: bold;
+        text-shadow: 0 0 5px rgba(0, 255, 127, 0.5);
+    }}
+    .kpi-card.purple .kpi-value {{
+        color: #00aaff;
+        text-shadow: 0 0 5px rgba(0, 170, 255, 0.5);
+    }}
+</style>
+
+<div class="kpi-container">
+    <div class="kpi-card">
+        <div class="kpi-title">Total NCO Analizadas</div>
+        <div class="kpi-value">{total_nco:,}</div>
+    </div>
+    <div class="kpi-card">
+        <div class="kpi-title">NCO vinculadas a proceso</div>
+        <div class="kpi-value">{nco_con_match:,}</div>
+    </div>
+    <div class="kpi-card">
+        <div class="kpi-title">Tasa de conversión</div>
+        <div class="kpi-value">{porcentaje_match_nco:.1f}%</div>
+    </div>
+    
+    <div class="kpi-card purple">
+        <div class="kpi-title">Total Procesos SERCOP (OCDS)</div>
+        <div class="kpi-value">{total_procesos:,}</div>
+    </div>
+    <div class="kpi-card purple">
+        <div class="kpi-title">Procesos SERCOP vinculados</div>
+        <div class="kpi-value">{procesos_identificados:,}</div>
+    </div>
+    <div class="kpi-card purple">
+        <div class="kpi-title">Cobertura sobre procesos</div>
+        <div class="kpi-value">{porcentaje_identificacion_procesos:.1f}%</div>
+    </div>
+    
+</div>
+"""
+
+display(HTML(kpi_html))
+```
+Resumen descriptivo de los principales indicadores contenidos en los datasets analizados.
+
+## Visualización 1: Tasa de conversión
+
+### Pregunta analítica
+¿Qué proporción de necesidades de contratación publicadas en NCO logra vincularse con un proceso formal registrado en SERCOP y cuál es el estado final de esos procesos?
+
+Para responder esta pregunta, se aplica un algoritmo de emparejamiento basado en similitud textual entre la descripción de la necesidad y el objeto del proceso formal publicado en la base OCDS del SERCOP. A partir de ello, se identifican los casos con coincidencia confiable, definida por una similitud igual o superior al 75%.
+
+A partir de esta lógica analítica se derivan dos preguntas complementarias:
+
+1. ¿Cuántas necesidades de contratación publicadas en NCO presentan una coincidencia confiable con un proceso formal?
+2. Entre los casos con coincidencia confiable, ¿cuál es la distribución de los estados finales del proceso asociado?
+
+## Justificación del tipo de gráfico
+
+Se utilizan **gráficos de barras** porque permiten comparar con claridad cantidades y proporciones entre categorías discretas. Además, se emplean **barras horizontales** cuando las etiquetas son extensas, ya que mejoran la legibilidad y facilitan la comparación entre categorías.
+
+- El primer gráfico muestra la proporción de NCO que pudieron vincularse con procesos formales y, de forma complementaria, la cobertura de procesos SERCOP que fueron asociados a una NCO.
+- El segundo gráfico presenta la distribución de los procesos vinculados según su estado formal.
+
+
+```{python}
+#| label: fig-nco-eficiencia
+#| fig-cap: "Análisis de conversión NCO a procesos SERCOP identificados."
+
+
+# Datos para Conversión de NCO
+conv_df = pd.DataFrame({
+    "Categoria": ["Sin Proceso", "Con Proceso"],
+    "Cantidad": [nco_sin_match, nco_con_match]
+})
+
+# Datos para Identificación de Procesos (Cobertura)
+orden_identificacion = [
+    "Identificado Confiable",
+    "Identificado Potencial",
+    "No Identificado"
+]
+
+proc_df = pd.DataFrame({
+    "Categoria": orden_identificacion,
+    "Cantidad": [
+        procesos_identificados_confiable,
+        procesos_identificados_potencial,
+        procesos_no_identificados
+    ]
+})
+
+# Gráfico 1: Eficiencia de la NCO (¿Cuántas terminan en proceso?)
+grafico_nco = (
+    alt.Chart(conv_df)
+    .mark_bar(color="#00FF7F", opacity=0.8, stroke="#00FF7F", strokeWidth=1, cornerRadiusEnd=5)
+    .encode(
+        x=alt.X("Categoria:N", title="Conversión en NCO", axis=alt.Axis(labelAngle=0)),
+        y=alt.Y("Cantidad:Q", title="Registros", scale=alt.Scale(domain=[0, total_nco])),
+        tooltip=["Categoria", "Cantidad"]
+    )
+    .properties(title="NCO -> PROCESO", width=250, height=250)
+)
+
+texto_nco = grafico_nco.mark_text(dy=-10, color="#E0E0E0", fontWeight="normal").encode(
+    text=alt.Text("Cantidad:Q", format=",")
+)
+
+# Gráfico 2: Cobertura del Algoritmo (¿Cuántos procesos de la vida real captamos?)
+grafico_proc = (
+    alt.Chart(proc_df)
+    .mark_bar(opacity=0.8, strokeWidth=1, cornerRadiusEnd=5)
+    .encode(
+        x=alt.X(
+            "Categoria:N",
+            sort=orden_identificacion,
+            title=None,
+            axis=alt.Axis(labels=False, ticks=False, domain=False)
+        ),
+        y=alt.Y("Cantidad:Q", title=None, scale=alt.Scale(domain=[0, total_procesos])),
+        color=alt.Color(
+            "Categoria:N",
+            sort=orden_identificacion,
+            scale=alt.Scale(
+                domain=orden_identificacion,
+                range=["#00AAFF", "#b3ea0dff", "#f907b8ff"]
+            ),
+            legend=alt.Legend(
+                title="Estado de Identificación",
+                orient="right",
+                titleColor="#00FF7F",
+                labelColor="#E0E0E0",
+                labelFont=BODY_FONT,
+                titleFont=BODY_FONT
+            )
+        ),
+        stroke=alt.Color(
+            "Categoria:N",
+            sort=orden_identificacion,
+            scale=alt.Scale(
+                domain=orden_identificacion,
+                range=["#00AAFF", "#b3ea0dff", "#f907b8ff"]
+            ),
+            legend=None
+        ),
+        tooltip=["Categoria", "Cantidad"]
+    )
+    .properties(title="IDENTIFICACIÓN SERCOP", width=320, height=250)
+)
+
+texto_proc = grafico_proc.mark_text(dy=-10, color="#E0E0E0", fontWeight="normal").encode(
+    text=alt.Text("Cantidad:Q", format=",")
+)
+
+# Combinación con Estilo Tron
+chart_final_contraste = alt.hconcat(
+    (grafico_nco + texto_nco), 
+    (grafico_proc + texto_proc)
+).configure(
+    background="#0C0C0C"
+).configure_view(
+    strokeOpacity=0
+).configure_title(
+    color="#00FF7F",
+    font=BODY_FONT,
+    fontSize=14,
+    anchor="middle",
+    offset=20
+).configure_axis(
+    gridColor="#1a1a1a",
+    domainColor="#00FF7F",
+    domainWidth=2,
+    tickColor="#00FF7F",
+    labelColor="#E0E0E0",
+    titleColor="#00FF7F",
+    labelFont=BODY_FONT,
+    titleFont=BODY_FONT,
+    labelFontSize=10,
+    titleFontSize=12
+)
+
+display(chart_final_contraste)
+```
+
+
+Panel A: De un total de **`{python} f"{total_nco:,}"`** necesidades de contratación publicadas en 2025, **`{python} f"{nco_con_match:,}"`** presentan una coincidencia confiable con un proceso formal, lo que equivale a una tasa de conversión del **`{python} f"{porcentaje_match_nco:.1f}"`**%.
+
+Panel B: De los **`{python} f"{total_procesos:,}"`** procesos publicados en la base OCDS/SERCOP durante 2025, **`{python} f"{procesos_identificados_confiable:,}"`** quedaron como identificados confiables y **`{python} f"{procesos_identificados_potencial:,}"`** como identificados potenciales. En conjunto, **`{python} f"{procesos_identificados:,}"`** procesos presentan algún nivel de vinculación con una NCO, equivalente al **`{python} f"{porcentaje_identificacion_procesos:.1f}"`**% del total, mientras **`{python} f"{procesos_no_identificados:,}"`** permanecen no identificados.
+
+
+```{python}
+#| label: fig-ranking-estados
+#| fig-cap: "Número de procesos para cada estado formal"
+# =========================
+# Gráfico de Barras Horizontales (Todos los estados)
+# =========================
+
+# VARIABLE PARA PROBAR DIFERENTES ESQUEMAS DE COLOR:
+# Opciones válidas: 'viridis', 'magma', 'inferno', 'plasma', 'blues', 'tealblues', 'greens', 'purples', 'spectral', 'turbo'
+esquema_color = "viridis" 
+
+# Contar todos los estados originales
+todos_estados_counts = (
+    res_best["Estado_Procesos_Todos"]
+    .value_counts()
+    .reset_index()
+)
+todos_estados_counts.columns = ["Estado", "Cantidad"]
+
+# Base común para ambas capas (solo datos y ejes principales)
+base_ranking = alt.Chart(todos_estados_counts).encode(
+    x=alt.X("Cantidad:Q", title="NÚMERO DE PROCESOS"),
+    y=alt.Y("Estado:N", title="ESTADO", sort="-x"),
+    tooltip=["Estado", "Cantidad"]
+)
+
+# Capa 1: Barras con degradado
+grafico_barras = base_ranking.mark_bar(opacity=0.8, strokeWidth=1, cornerRadiusEnd=3).encode(
+    color=alt.Color(
+        "Cantidad:Q", 
+        title="Intensidad",
+        scale=alt.Scale(scheme=esquema_color),
+        
+    ),
+    stroke=alt.Color("Cantidad:Q", scale=alt.Scale(scheme=esquema_color), legend=None)
+).properties(
+    title="RANKING DE ESTADOS",
+    width=600,
+    height=alt.Step(25)
+)
+
+# Capa 2: Texto blanco (totalmente independiente)
+texto_labels = base_ranking.mark_text(
+    align="left",
+    baseline="middle",
+    dx=5,
+    fontWeight="bold",
+    color="#FFFFFF" # Blanco forzado en la marca
+).encode(
+    text=alt.Text("Cantidad:Q", format=","),
+    color=alt.value("#FFFFFF") # Blanco forzado en la codificación
+)
+
+# Estilo Tron
+chart_todos_tron = (grafico_barras + texto_labels).configure(
+    background="#0C0C0C"
+).configure_view(
+    strokeOpacity=0
+).configure_title(
+    color="#f0f0ecff",
+    font=BODY_FONT,
+    fontSize=16,
+    anchor="start",
+    offset=20
+).configure_axis(
+    gridColor="#1a1a1a",
+    domainColor="#00aaff",
+    labelColor="#E0E0E0",
+    titleColor="#00aaff",
+    labelFont=BODY_FONT,
+    titleFont=BODY_FONT,
+    labelFontSize=10,
+    titleFontSize=12
+)
+
+display(chart_todos_tron)
+```
+El gráfico evidencia una concentración importante de procesos vinculados en estados avanzados del ciclo de contratación, especialmente en ejecución, finalización y adjudicación. En conjunto, estos estados reúnen la mayor parte de los casos con coincidencia confiable, mientras que también se observan 6,800 procesos en estado desierto.
+
+### Complemento descriptivo: distribución por tipo de contratación
+
+::: {layout-ncol=2}
+
+```{python}
+#| echo: false
+#| label: fig-acronimos
+#| fig-cap: "Número de procesos para cada tipo de compra"
+
+
+# 1. Datos
+acronimo_map = {
+    "SIE": "Subasta Inversa Electrónica",
+    "LICS": "Licitación de Seguros",
+    "LICO": "Licitación de Obras",
+    "MCS": "Menor Cuantía de Servicios",
+    "MCO": "Menor Cuantía de Obras",
+    "MCB": "Menor Cuantía de Bienes",
+    "COT": "Cotización",
+    "RE-": "Régimen Especial",
+    "CD": "Contratación Directa",
+    "CDC": "Contratación Directa de Consultoría",
+    "LCC": "Lista Corta de Consultoría",
+    "CON": "Concurso Público de Consultoría",
+    "INF": "Ínfima Cuantía",
+    "LIC": "Licitación",
+    "CE": "Catálogo Electrónico"
+}
+
+res_best["Acronimo"] = res_best["Codigo_Proceso"].astype(str).str.split("-").str[0]
+acro_counts = res_best["Acronimo"].value_counts().reset_index()
+acro_counts.columns = ["Acronimo", "Cantidad"]
+acro_counts["Descripcion"] = acro_counts["Acronimo"].map(acronimo_map).fillna("Otros Regímenes")
+top_acro = acro_counts.head(15).copy()
+
+# 2. Gráfico
+chart_acro = (
+    alt.Chart(top_acro).mark_bar(opacity=0.8, strokeWidth=1, cornerRadiusEnd=3).encode(
+        x=alt.X("Cantidad:Q", title="CANTIDAD", axis=alt.Axis(labelAngle=0)),
+        y=alt.Y("Acronimo:N", title="TIPO", sort="-x"),
+        color=alt.Color("Cantidad:Q", scale=alt.Scale(scheme="viridis"), legend=None),
+        stroke=alt.Color("Cantidad:Q", scale=alt.Scale(scheme="viridis"), legend=None),
+        tooltip=["Acronimo", "Descripcion", "Cantidad"]
+    ) + alt.Chart(top_acro).mark_text(align="left", dx=5, fontWeight="bold", color="#FFFFFF").encode(
+        x=alt.X("Cantidad:Q"),
+        y=alt.Y("Acronimo:N", sort="-x"),
+        text=alt.Text("Cantidad:Q", format=",")
+    )
+).properties(
+    width=350,
+    height=450
+).configure(
+    background="#0C0C0C"
+).configure_view(
+    strokeOpacity=0
+).configure_axis(
+    labelColor="#E0E0E0", titleColor="#00FFFF", gridColor="#1a1a1a",
+    labelFont=BODY_FONT, titleFont=BODY_FONT
+)
+
+display(chart_acro)
+```
+
+```{python}
+#| echo: false
+# 3. Glosario
+glosario_items = "".join([
+    f'<div style="margin-bottom:8px; border-left: 2px solid #00FFFF; padding-left: 8px;">'
+    f'<b style="color:#00FFFF; font-size:0.85rem;">{row["Acronimo"]}:</b><br>'
+    f'<span style="font-size:0.75rem; color:#E0E0E0;">{row["Descripcion"]}</span>'
+    f'</div>' for _, row in top_acro.iterrows()
+])
+
+display(HTML(f"""
+<div style="background: #111; border: 2px solid #00FFFF; border-radius: 8px; padding: 15px; height: 430px; overflow-y: auto; font-family: 'Arial', sans-serif; box-shadow: 0 0 15px rgba(0, 255, 255, 0.1);">
+    <h5 style="color: #00FFFF; margin-top: 0; border-bottom: 1px solid #333; padding-bottom: 10px; text-transform: uppercase;">Glosario</h5>
+    {glosario_items}
+</div>
+"""))
+```
+
+::: 
+La modalidad de **Subasta Inversa Electrónica (SIE)** concentra 20,335 procesos, lo que representa la mayor parte de los procesos vinculados. Este patrón sugiere que la conversión de NCO hacia procesos formales se concentra principalmente en modalidades de alta frecuencia dentro del sistema de contratación pública.
+
+## Visualización 2: Integridad de la información
+### Pregunta analítica
+
+¿Qué procesos en estados avanzados del ciclo de contratación presentan mayor diferencia entre la necesidad publicada en NCO y el objeto del proceso formal asociado?
+
+### Justificación del tipo de gráfico
+
+Se utiliza un **gráfico de barras horizontal** porque el objetivo es construir un **ranking** de casos con mayor cambio.  
+Este tipo de gráfico permite ordenar fácilmente los procesos desde el cambio más alto al más bajo y además facilita la lectura de etiquetas largas, como los códigos de proceso.
+
+En este caso, el cambio se calcula como:
+
+**cambio_textual = 100 - Porcentaje_Similaridad**
+
+Un valor más alto indica una mayor diferencia entre el texto publicado en NCO y el texto del proceso formal asociado.
+
+```{python}
+
+# =========================
+# 2. Filtrar matches confiables
+# =========================
+res_conf = res[res["Estado_Coincidencia"] == "Match Confiable"].copy()
+
+res_conf["Porcentaje_Similaridad"] = pd.to_numeric(
+    res_conf["Porcentaje_Similaridad"], errors="coerce"
+)
+
+# Conservar solo el mejor match por Codigo_NCO
+res_best = (
+    res_conf
+    .sort_values(["Codigo_NCO", "Porcentaje_Similaridad"], ascending=[True, False])
+    .drop_duplicates(subset="Codigo_NCO", keep="first")
+    .copy()
+)
+
+# =========================
+# 3. Filtrar procesos adjudicados / contratados
+# =========================
+def es_resultado_formal(estado):
+    if pd.isna(estado):
+        return False
+    
+    estado = str(estado).strip().lower()
+    
+    claves = [
+        "adjudic",
+        "contrat",
+        "ejecución",
+        "ejecucion",
+        "recepción",
+        "recepcion",
+        "finalizada",
+        "finalizado"
+    ]
+    
+    return any(k in estado for k in claves)
+
+res_best = res_best[res_best["Estado_Procesos_Todos"].apply(es_resultado_formal)].copy()
+
+# =========================
+# 4. Crear variable de cambio
+# =========================
+res_best["cambio_textual"] = 100 - res_best["Porcentaje_Similaridad"]
+
+# Etiqueta corta solo para mostrar en el eje
+res_best["proceso_label"] = res_best["Codigo_Proceso"].astype(str)
+
+# =========================
+# 5. Seleccionar top 20 de mayor cambio
+# =========================
+top_cambio = (
+    res_best
+    .sort_values("cambio_textual", ascending=False)
+    .head(20)
+    .copy()
+)
+
+top_cambio = top_cambio[
+    [
+        "proceso_label",
+        "Codigo_Proceso",
+        "Codigo_NCO",
+        "Entidad_Procesos_Todos",
+        "Provincia",
+        "Ciudad",
+        "Porcentaje_Similaridad",
+        "cambio_textual",
+        "Descripcion_Necesidad",
+        "Objeto_Procesos_Todos",
+        "Estado_Procesos_Todos"
+    ]
+]
+
+
+
+```
+
+
+## Procesos adjudicados, contratados, finalizados o en ejecución
+
+Para facilitar la interpretación, los casos con match confiable único y estado formal se clasifican con base en un umbral de 10% de cambio textual, diferenciando entre coincidencias con cambio mínimo y coincidencias con alto cambio.
+
+```{python}
+#| echo: false
+from IPython.display import HTML
+
+# Definir el umbral de alto cambio
+umbral = 10
+
+
+# 1. Total de coincidencias 
+total_conf_unique = len(res_best)
+
+# 2. Filtrar los que tienen estado formal (para el análisis de cambio)
+res_formal = res_best[res_best["Estado_Procesos_Todos"].apply(es_resultado_formal)].copy()
+
+# 3. Calcular cantidades para las tarjetas
+alto_cambio_count = len(res_formal[res_formal["cambio_textual"] >= umbral])
+sin_alto_cambio_count = len(res_formal[res_formal["cambio_textual"] < umbral])
+otros_estados_count = total_conf_unique - (alto_cambio_count + sin_alto_cambio_count)
+
+# Crear HTML para las tarjetas KPI (3 columnas horizontales)
+kpi_html = f"""
+<div style="display: flex; gap: 15px; justify-content: start; margin-top: 20px; font-family: 'Arial', sans-serif; flex-wrap: wrap;">
+    <!-- Tarjeta: Alto Cambio -->
+    <div style="background: #0C0C0C; border: 2px solid #FF4500; border-radius: 10px; padding: 15px; min-width: 220px; box-shadow: 0 0 15px rgba(255, 69, 0, 0.2); flex: 1;">
+        <div style="color: #FF4500; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 10px;">Alto Cambio (≥{umbral}%)</div>
+        <div style="color: #FFFFFF; font-size: 2.2rem; font-weight: bold;">{alto_cambio_count:,}</div>
+        <div style="color: #FF4500; font-size: 0.75rem; margin-top: 5px;">Modificaciones significativas</div>
+    </div>
+    
+    <!-- Tarjeta: Cambio Mínimo -->
+    <div style="background: #0C0C0C; border: 2px solid #00FF7F; border-radius: 10px; padding: 15px; min-width: 220px; box-shadow: 0 0 15px rgba(0, 255, 127, 0.2); flex: 1;">
+        <div style="color: #00FF7F; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 10px;">Cambio Mínimo (<{umbral}%)</div>
+        <div style="color: #FFFFFF; font-size: 2.2rem; font-weight: bold;">{sin_alto_cambio_count:,}</div>
+        <div style="color: #00FF7F; font-size: 0.75rem; margin-top: 5px;">Fiel a la NCO original</div>
+    </div>
+
+
+</div>
+<div style="color: #888; font-family: 'Arial', sans-serif; font-size: 0.8rem; margin-top: 10px; padding-left: 5px;">
+    Total de casos con match confiable único analizados: <b>{total_conf_unique:,}</b>
+</div>
+"""
+
+display(HTML(kpi_html))
+```
+```{python}
+#| label: fig-ranking-cambio
+#| fig-cap: "Top 20 procesos con mayor cambio textual entre la NCO y el resultado formal."
+# Base común para el ranking de cambio
+base_ranking_cambio = alt.Chart(top_cambio).encode(
+    x=alt.X("cambio_textual:Q", title="CAMBIO TEXTUAL (%)"),
+    y=alt.Y("proceso_label:N", sort="-x", title="CÓDIGO DEL PROCESO"),
+    tooltip=[
+        alt.Tooltip("Codigo_Proceso:N", title="Código proceso"),
+        alt.Tooltip("Codigo_NCO:N", title="Código NCO"),
+        alt.Tooltip("Entidad_Procesos_Todos:N", title="Entidad"),
+        alt.Tooltip("Porcentaje_Similaridad:Q", title="Similitud (%)", format=".2f"),
+        alt.Tooltip("cambio_textual:Q", title="Cambio (%)", format=".2f"),
+        alt.Tooltip("Estado_Procesos_Todos:N", title="Estado")
+    ]
+)
+
+# Capa de Barras con NEÓN (naranjas/rojos para indicar cambio alto)
+barras_cambio = base_ranking_cambio.mark_bar(opacity=0.8, strokeWidth=1, cornerRadiusEnd=3).encode(
+    color=alt.Color(
+        "cambio_textual:Q", 
+        title="Intensidad de Cambio",
+        scale=alt.Scale(scheme="reds"),
+        legend=alt.Legend(title="Escala de Cambio", labelColor="#E0E0E0", titleColor="rgba(243, 246, 246, 1)")
+    ),
+    stroke=alt.Color("cambio_textual:Q", scale=alt.Scale(scheme="reds"), legend=None)
+).properties(
+    title="RANKING: TOP 20 PROCESOS CON MAYOR CAMBIO",
+    width=700,
+    height=alt.Step(25)
+)
+
+# Capa de Texto Blanco
+texto_cambio_labels = base_ranking_cambio.mark_text(
+    align="left",
+    baseline="middle",
+    dx=5,
+    fontWeight="bold",
+    color="#FFFFFF"
+).encode(
+    text=alt.Text("cambio_textual:Q", format=".1f"),
+    color=alt.value("#FFFFFF")
+)
+
+# Configuración Tron Final
+chart_ranking_tron = (barras_cambio + texto_cambio_labels).configure(
+    background="#0C0C0C"
+).configure_view(
+    strokeOpacity=0
+).configure_title(
+    color="#00FFFF",
+    font=BODY_FONT,
+    fontSize=18,
+    anchor="start",
+    offset=20
+).configure_axis(
+    gridColor="#1a1a1a",
+    domainColor="#00FFFF",
+    labelColor="#E0E0E0",
+    titleColor="#00FFFF",
+    labelFont=BODY_FONT,
+    titleFont=BODY_FONT,
+    labelFontSize=10,
+    titleFontSize=14
+)
+
+display(chart_ranking_tron)
+```
+Se observa que 10 de los 20 procesos con mayor cambio textual corresponden a Gobiernos Autónomos Descentralizados. Este resultado nos podría dar una alerta de en donde se podría presentar casos de direccionamiento de procesos. 
+
+
+
+## Mapa de Calor: Concentración de alto cambio en entidades.
+
+Este mapa de calor permite identificar qué entidades y qué tipos de contratación concentran un mayor número de procesos clasificados con alto cambio textual respecto a la necesidad publicada en NCO.
+
+### Justificación del tipo de gráfico
+
+Se utiliza un **mapa de calor** porque el análisis combina dos variables categóricas —entidad y tipo de contratación— con una métrica cuantitativa asociada: el número de procesos con alto cambio textual. Esta estructura matricial permite detectar patrones de concentración y resaltar visualmente las combinaciones entidad–tipo de contratación con mayor frecuencia de casos relevantes.
+
+```{python}
+#| label: fig-heatmap-cambio
+#| fig-cap: "Matriz de concentración: Cantidad de procesos con alto cambio (>=10%) por Entidad y Tipo."
+
+# 1. Preparar datos para el heatmap (Matriz Completa con Ceros)
+# Filtramos por alto cambio (>=20%)
+res_heatmap = res_best[res_best["cambio_textual"] >= 10].copy()
+res_heatmap["Acronimo"] = res_heatmap["Codigo_Proceso"].astype(str).str.split("-").str[0]
+
+# Para Entidades, tomamos el Top 15 para que sea legible, pero con matriz completa de acrónimos
+top_entidades = res_heatmap["Entidad_Procesos_Todos"].value_counts().head(15).index.tolist()
+todos_acronimos = sorted(res_heatmap["Acronimo"].unique())
+
+# Crear todas las combinaciones posibles para el Top 15 de entidades
+full_index = pd.MultiIndex.from_product(
+    [top_entidades, todos_acronimos], 
+    names=["Entidad_Procesos_Todos", "Acronimo"]
+)
+
+# Agrupar los conteos actuales, filtrar por el top 15, reindexar y llenar con 0
+counts = (
+    res_heatmap[res_heatmap["Entidad_Procesos_Todos"].isin(top_entidades)]
+    .groupby(["Entidad_Procesos_Todos", "Acronimo"])
+    .size()
+    .reindex(full_index, fill_value=0)
+    .reset_index(name="Cantidad")
+)
+
+# 2. Crear Heatmap Estilo Tron (Entidad vs Acrónimo) con Matriz Completa y Escala Magma
+heatmap_alto_cambio = alt.Chart(counts).mark_rect(stroke="#3d023dff", strokeWidth=0.1).encode(
+    x=alt.X("Acronimo:N", title="TIPO DE CONTRATACIÓN", axis=alt.Axis(labelAngle=0)),
+    y=alt.Y("Entidad_Procesos_Todos:N", title="ENTIDAD", sort=alt.EncodingSortField(field="Cantidad", op="sum", order="descending")),
+    color=alt.Color("Cantidad:Q", title="CANTIDAD", scale=alt.Scale(scheme="cividis")),
+    tooltip=[
+        alt.Tooltip("Entidad_Procesos_Todos:N", title="Entidad"),
+        alt.Tooltip("Acronimo:N", title="Tipo de Compra"),
+        alt.Tooltip("Cantidad:Q", title="Procesos con Alto Cambio")
+    ]
+).properties(
+    title="CONCENTRACIÓN DE CAMBIO TEXTUAL POR ENTIDAD RANKING TOP 15",
+    width=600,
+    height=450 
+).configure(
+    background="#0C0C0C"
+).configure_view(
+    strokeOpacity=0
+).configure_title(
+    color="#faf7f6ff",
+    font=BODY_FONT,
+    fontSize=18,
+    anchor="start",
+    offset=20
+).configure_axis(
+    grid=False,
+    domainColor="#00FFFF",
+    labelColor="#E0E0E0",
+    titleColor="#00FFFF",
+    labelFont=BODY_FONT,
+    labelFontSize=10
+).configure_legend(
+    labelColor="#E0E0E0",
+    titleColor="#00FFFF",
+    titleFont=BODY_FONT
+)
+
+display(heatmap_alto_cambio)
+```
+Este gráfico permite identificar qué entidades y modalidades concentran más casos con alto cambio textual. Estas concentraciones deben interpretarse como señales de alerta para priorizar revisiones más detalladas, pero no constituyen por sí mismas evidencia directa de irregularidad.
+```{python}
+#| echo: false
+#| label: fig-distribucion-tipo
+#| fig-cap: "Distribución del cambio textual segmentado por los tipos de contratación más frecuentes."
+# =========================
+# 2. Filtrar matches confiables considerando resultado formal
+# =========================
+
+# Usamos la misma lógica de los indicadores KPI para mantener consistencia
+def es_resultado_formal_v2(estado):
+    if pd.isna(estado): return False
+    estado = str(estado).strip().lower()
+    claves = ["adjudic", "contrat", "ejecución", "ejecucion", "recepción", "recepcion", "finalizada", "finalizado"]
+    return any(k in estado for k in claves)
+
+# Aseguramos que trabajamos con el mejor match único por NCO
+res_best_v2 = (
+    res[res["Estado_Coincidencia"] == "Match Confiable"]
+    .sort_values(["Codigo_NCO", "Porcentaje_Similaridad"], ascending=[True, False])
+    .drop_duplicates(subset="Codigo_NCO", keep="first")
+    .copy()
+)
+
+# Convertir similaridad a numérico
+res_best_v2["Porcentaje_Similaridad"] = pd.to_numeric(res_best_v2["Porcentaje_Similaridad"], errors="coerce")
+res_best_v2["cambio_textual"] = 100 - res_best_v2["Porcentaje_Similaridad"]
+
+# Filtrar por procesos formales (adjudicados, etc.)
+res_plot_base = res_best_v2[res_best_v2["Estado_Procesos_Todos"].apply(es_resultado_formal_v2)].copy()
+
+# Extraer tipo de contratación
+res_plot_base["tipo_contratacion"] = res_plot_base["Codigo_Proceso"].astype(str).str.split("-").str[0]
+
+# Seleccionar los Top 6 tipos más frecuentes para evitar saturación
+top_6_tipos = res_plot_base["tipo_contratacion"].value_counts().head(6).index
+res_plot = res_plot_base[res_plot_base["tipo_contratacion"].isin(top_6_tipos)].copy()
+
+# =========================
+# Histograma Facetado (ESTILO TRON)
+# =========================
+grafico_bins_facet = (
+    alt.Chart(res_plot)
+    .mark_bar(opacity=0.8, strokeWidth=1, cornerRadiusEnd=2)
+    .encode(
+        x=alt.X("cambio_textual:Q", bin=alt.Bin(step=10), title="CAMBIO TEXTUAL (%)"),
+        y=alt.Y("count():Q", title="NÚMERO DE PROCESOS"),
+        color=alt.Color(
+            "tipo_contratacion:N", 
+            scale=alt.Scale(scheme="viridis"), 
+            legend=None
+        ),
+        stroke=alt.Color("tipo_contratacion:N", scale=alt.Scale(scheme="viridis"), legend=None),
+        tooltip=[
+            alt.Tooltip("tipo_contratacion:N", title="Tipo"),
+            alt.Tooltip("count():Q", title="Total en este rango")
+        ]
+    )
+    .properties(width=150, height=180)
+    .facet(
+        column=alt.Column("tipo_contratacion:N", title="DISTRIBUCIÓN POR TIPO DE CONTRATACIÓN")
+    )
+    .configure(
+        background="#0C0C0C"
+    ).configure_view(
+        strokeOpacity=0
+    ).configure_axis(
+        gridColor="#1a1a1a",
+        domainColor="#00FFFF",
+        labelColor="#E0E0E0",
+        titleColor="#00FFFF",
+        labelFont=BODY_FONT,
+        titleFont=BODY_FONT,
+        labelFontSize=9,
+        titleFontSize=11
+    ).configure_header(
+        titleColor="#00FFFF",
+        labelColor="#00FFFF",
+        titleFont=BODY_FONT,
+        labelFont=BODY_FONT,
+        titleFontSize=14,
+        labelFontSize=12
+    )
+)
+
+display(grafico_bins_facet)
+```
+El gráfico facetado permite observar que la distribución del cambio textual varía según el tipo de procedimiento. En modalidades como SIE, una parte importante de los casos se concentra en rangos relativamente bajos de cambio, lo que sugiere ajustes menores de redacción, estandarización o uso de términos equivalentes, sin implicar necesariamente una alteración sustantiva del objeto de compra.
+
+## Visualización 3: Patrones territoriales y de entidades
+
+### Pregunta analítica
+
+¿En qué provincias y entidades se concentran los casos donde existe un alto cambio entre la necesidad publicada en NCO y el proceso formal asociado?
+
+### Justificación del tipo de gráfico
+
+Se utilizan **gráficos de barras horizontales** porque permiten comparar de forma clara categorías con nombres largos, como provincias y entidades contratantes.
+
+Además, el gráfico incorpora una **segunda dimensión visual mediante el color**, que representa la **tasa de alto cambio**.  
+De esta manera, la longitud de la barra muestra el número de casos, mientras que el color permite identificar qué provincias o entidades presentan una proporción relativamente mayor de casos con alto cambio.
+
+En esta visualización, se define como **alto cambio** a los casos donde:
+
+**cambio_textual >= 20**
+
+donde:
+
+**cambio_textual = 100 - Porcentaje_Similaridad**
+```{python}
+
+# =========================
+# 2. Preparación de Datos (Filtros Consolidados)
+# =========================
+
+# Consolidamos la lógica para asegurar coherencia con los KPIs superiores
+res_best_v3 = (
+    res[res["Estado_Coincidencia"] == "Match Confiable"]
+    .sort_values(["Codigo_NCO", "Porcentaje_Similaridad"], ascending=[True, False])
+    .drop_duplicates(subset="Codigo_NCO", keep="first")
+    .copy()
+)
+
+# Traer 'Tipo de Necesidad' desde la base NCO (actúa como tipo de contratación)
+if "Tipo de Necesidad" not in res_best_v3.columns:
+    nco_subset = nco[["Codigo de Necesidad", "Tipo de Necesidad"]].drop_duplicates()
+    res_best_v3 = res_best_v3.merge(
+        nco_subset, 
+        left_on="Codigo_NCO", 
+        right_on="Codigo de Necesidad", 
+        how="left"
+    )
+ 
+    res_best_v3 = res_best_v3.rename(columns={"Tipo de Necesidad": "Tipo_Compra_NCO"})
+
+res_best_v3["Porcentaje_Similaridad"] = pd.to_numeric(res_best_v3["Porcentaje_Similaridad"], errors="coerce")
+res_best_v3["cambio_textual"] = 100 - res_best_v3["Porcentaje_Similaridad"]
+
+
+res_best_v3 = res_best_v3[res_best_v3["Estado_Procesos_Todos"].apply(es_resultado_formal_v2)].copy()
+
+# =========================
+# 3. Mapeo de Procedimientos (Prefijos)
+# =========================
+mapeo_procedimientos = {
+    "SIE": "Subasta Inversa Electrónica",
+    "LICO": "Licitación (Obras)",
+    "LICS": "Licitación (Servicios)",
+    "LICB": "Licitación (Bienes)",
+    "MCO": "Menor Cuantía (Obras)",
+    "MCS": "Menor Cuantía (Servicios)",
+    "MCB": "Menor Cuantía (Bienes)",
+    "COTO": "Cotización (Obras)",
+    "COTS": "Cotización (Servicios)",
+    "COTB": "Cotización (Bienes)",
+    "CDC": "Consultoría Directa",
+    "LCC": "Lista Corta (Consultoría)",
+    "CPC": "Cotización (Consultoría/Bienes)",
+    "FI": "Feria Inclusiva",
+    "PE": "Procedimiento Especial",
+    "VPN": "Verificación Prod. Nacional",
+    "LICSG": "Licitación de Seguros",
+    "CDTU": "Contratación Directa Terminación Unilateral",
+    "CN": "Contratación Directa"
+}
+
+def obtener_tipo_procedimiento(codigo):
+    if pd.isna(codigo) or "-" not in str(codigo):
+        return "Otros / No Identificado"
+    prefijo = str(codigo).split("-")[0].upper()
+    return mapeo_procedimientos.get(prefijo, f"Otro ({prefijo})")
+
+res_best_v3["Tipo_Procedimiento"] = res_best_v3["Codigo_Proceso"].apply(obtener_tipo_procedimiento)
+
+# =========================
+# 4. Crear variables analíticas
+# =========================
+umbral_alto_cambio = 10
+res_best_v3["alto_cambio"] = res_best_v3["cambio_textual"] >= umbral_alto_cambio
+
+# =========================
+# 5. Agregación por provincia
+# =========================
+prov_df = (
+    res_best_v3
+    .groupby("Provincia", dropna=False)
+    .agg(
+        total_procesos=("Codigo_NCO", "nunique"),
+        casos_alto_cambio=("alto_cambio", "sum"),
+        tasa_alto_cambio=("alto_cambio", "mean"),
+        cambio_promedio=("cambio_textual", "mean")
+    )
+    .reset_index()
+)
+
+prov_df = prov_df[prov_df["casos_alto_cambio"] > 0].copy()
+
+top_prov = (
+    prov_df
+    .sort_values(["casos_alto_cambio", "tasa_alto_cambio"], ascending=[False, False])
+    .head(15)
+    .copy()
+)
+
+# =========================
+# 6. Agregación por entidad
+# =========================
+ent_df = (
+    res_best_v3
+    .groupby("Entidad_Procesos_Todos", dropna=False)
+    .agg(
+        total_procesos=("Codigo_NCO", "nunique"),
+        casos_alto_cambio=("alto_cambio", "sum"),
+        tasa_alto_cambio=("alto_cambio", "mean"),
+        cambio_promedio=("cambio_textual", "mean")
+    )
+    .reset_index()
+)
+
+# filtro mínimo para evitar entidades con muy pocos casos
+ent_df = ent_df[ent_df["total_procesos"] >= 15].copy()
+ent_df = ent_df[ent_df["casos_alto_cambio"] > 0].copy()
+
+top_ent = (
+    ent_df
+    .sort_values(["casos_alto_cambio", "tasa_alto_cambio"], ascending=[False, False])
+    .head(15)
+    .copy()
+)
+
+top_prov["tasa_pct"] = top_prov["tasa_alto_cambio"] * 100
+top_ent["tasa_pct"] = top_ent["tasa_alto_cambio"] * 100
+
+
+# IDs genéricos se generan en el bloque de visualización para robustez
+```
+```{python}
+#| echo: false
+#| label: fig-concentracion-provincia
+#| fig-cap: "Distribución territorial de procesos con alto cambio por provincia."
+# =========================
+# Renderizado de Gráficos TRON (Visualización 3)
+# =========================
+
+# 1. Gráfico de Provincias (Tron Style)
+base_prov = alt.Chart(top_prov).encode(
+    x=alt.X("casos_alto_cambio:Q", title="NÚMERO DE CASOS"),
+    y=alt.Y("Provincia:N", sort="-x", title="PROVINCIA"),
+    tooltip=[
+        alt.Tooltip("Provincia:N", title="Provincia"),
+        alt.Tooltip("casos_alto_cambio:Q", title="Casos alto cambio"),
+        alt.Tooltip("total_procesos:Q", title="Total procesos"),
+        alt.Tooltip("tasa_pct:Q", title="Tasa (%)", format=".1f")
+    ]
+)
+
+grafico_prov = (base_prov.mark_bar(opacity=0.8, strokeWidth=1, cornerRadiusEnd=3).encode(
+    color=alt.Color(
+        "tasa_pct:Q", 
+        title="TASA DE CAMBIO (%)", 
+        scale=alt.Scale(scheme="purples"),
+        legend=alt.Legend(
+            titleColor="#00FFFF", 
+            labelColor="#E0E0E0", 
+            labelFont=BODY_FONT, 
+            titleFont=BODY_FONT,
+            orient="right"
+        )
+    ),
+    stroke=alt.Color("tasa_pct:Q", scale=alt.Scale(scheme="purples"), legend=None)
+).properties(
+    title="PROVINCIAS CON MAYOR CONCENTRACIÓN DE ALTO CAMBIO TEXTUAL",
+    width=600,
+    height=400
+) + base_prov.mark_text(align="left", dx=5, fontWeight="bold", color="#FFFFFF").encode(
+    text=alt.Text("casos_alto_cambio:Q", format=","),
+    color=alt.value("#FFFFFF")
+)).configure(
+    background="#0C0C0C"
+).configure_view(strokeOpacity=0).configure_title(
+    color="#00FFFF", font=BODY_FONT, fontSize=18, anchor="start"
+).configure_axis(
+    labelColor="#E0E0E0", titleColor="#00FFFF", gridColor="#1a1a1a", labelFont=BODY_FONT
+)
+
+display(grafico_prov)
+```
+
+Se puede observar que las provincias con mayor número de casos son Pichincha y Guayas, pero su tasa de cambio respecto al total de procesos publicados es baja (alrededor del 15% y 20% respectivamente). Mientras tanto, provincias como Loja, Imbabura y Esmeraldas presentan una tasa mayor en relación con su total de procesos. Esto nos indica que, al tener pocos procesos de contratación, cerca del 30% tienen cambios textuales altos, lo que permitiría generar alertas en estas provincias.
+```{python}
+#| echo: false
+#| label: fig-concentracion-entidad
+#| fig-cap: "Concentración institucional de casos con alto cambio textual (Top 15 entidades)."
+
+
+if "Entidad_ID" not in top_ent.columns:
+    top_ent = top_ent.sort_values("casos_alto_cambio", ascending=False).reset_index(drop=True)
+    top_ent["Entidad_ID"] = ["Entidad " + str(i+1) for i in range(len(top_ent))]
+
+base_ent = alt.Chart(top_ent).encode(
+    x=alt.X("casos_alto_cambio:Q", title="NÚMERO DE CASOS"),
+    y=alt.Y("Entidad_ID:N", sort="-x", title="ID DE ENTIDAD (Ver Leyenda Inferior)"),
+    tooltip=[
+        alt.Tooltip("Entidad_Procesos_Todos:N", title="Entidad"),
+        alt.Tooltip("Entidad_ID:N", title="ID"),
+        alt.Tooltip("casos_alto_cambio:Q", title="Casos alto cambio"),
+        alt.Tooltip("total_procesos:Q", title="Total procesos"),
+        alt.Tooltip("tasa_pct:Q", title="Tasa (%)", format=".1f")
+    ]
+)
+
+grafico_ent = (base_ent.mark_bar(opacity=0.8, strokeWidth=1, cornerRadiusEnd=3).encode(
+    color=alt.Color(
+        "tasa_pct:Q", 
+        title="TASA DE CAMBIO (%)", 
+        scale=alt.Scale(scheme="purples"),
+        legend=alt.Legend(
+            titleColor="#00FFFF", 
+            labelColor="#E0E0E0", 
+            labelFont=BODY_FONT, 
+            titleFont=BODY_FONT,
+            orient="right"
+        )
+    ),
+    stroke=alt.Color("tasa_pct:Q", scale=alt.Scale(scheme="purples"), legend=None)
+).properties(
+    title="ENTIDADES CON MAYOR CONCENTRACIÓN DE ALTO CAMBIO",
+    width=600,
+    height=400
+) + base_ent.mark_text(align="left", dx=5, fontWeight="bold", color="#FFFFFF").encode(
+    text=alt.Text("casos_alto_cambio:Q", format=","),
+    color=alt.value("#FFFFFF")
+)).configure(
+    background="#0C0C0C"
+).configure_view(strokeOpacity=0).configure_title(
+    color="#00FFFF", font=BODY_FONT, fontSize=18, anchor="start"
+).configure_axis(
+    gridColor="#1a1a1a", labelColor="#E0E0E0", titleColor="#00FFFF", labelFont=BODY_FONT
+)
+
+display(grafico_ent)
+```
+```{python}
+# --- Tarjeta de Leyenda HTML ---
+legend_html = f"""
+<div style="
+    background-color: #0C0C0C; 
+    border: 1px solid #00FFFF;
+    border-radius: 8px;
+    padding: 15px;
+    margin-top: 20px;
+    font-family: 'Arial', sans-serif;
+    color: #E0E0E0;
+    max-width: 800px;
+    box-shadow: 0 0 10px rgba(0, 255, 255, 0.2);
+">
+    <h3 style="color: #00FFFF; margin-top: 0; border-bottom: 1px solid #1a1a1a; padding-bottom: 10px;">
+        LEYENDA: GLOSARIO DE ENTIDADES
+    </h3>
+    <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 10px; font-size: 0.9em;">
+"""
+
+for _, row in top_ent.iterrows():
+    legend_html += f'<div><span style="color: #00FFFF; font-weight: bold;">{row["Entidad_ID"]}:</span> {row["Entidad_Procesos_Todos"]}</div>'
+
+legend_html += """
+    </div>
+</div>
+"""
+from IPython.display import HTML
+display(HTML(legend_html))
+```
+De la misma forma, se puede ver que las entidades de los sectores estratégicos (electricidad e hidrocarburos) presentan un número alto de procesos debido a la naturaleza de su giro de negocio. En empresas electricas CELEC y CENEL se puede observar una tasa de entre el 20 y 40% de procesos con cambios textuales altos, mientras que PETROECUADOR y otras empresas del sector presentas una tasa alta de procesos con cambio textual lo que llama la atención ya que en estas empresas se manejan montos altos de contratación.
+Otro punto a destacar es que del top 15 de entidades, 6 son gobiernos autónomos o entidades derivadas de estos que manejan tasas de cambio arriba del 30% de procesos con cambio textual.
+
+## Visualización 4: Patrones en tipos de contratación
+
+### Pregunta analítica
+
+¿Qué tipos de contratación presentan más diferencia entre la necesidad original y el resultado final obtenido en el proceso?
+
+### Justificación del tipo de gráfico
+
+Se utilizan **gráficos de barras horizontales** porque permiten comparar de forma clara categorías, como tipo de contratación, y la tasa de cambio de estas.
+
+
+```{python}
+#| echo: false
+#| label: fig-diferencia_tipo
+#| fig-cap: "Diferencia textual promedio por tipo de contratación"
+tipo_compra_df = (
+    res_best_v3
+    .groupby("Tipo_Procedimiento", dropna=False)
+    .agg(
+        total_procesos=("Codigo_NCO", "nunique"),
+        cambio_promedio=("cambio_textual", "mean")
+    )
+    .reset_index()
+)
+
+# Filtro mínimo para asegurar relevancia (al menos 3 procesos)
+tipo_compra_df = tipo_compra_df[tipo_compra_df["total_procesos"] >= 3].copy()
+
+# Ordenar por cambio promedio
+tipo_compra_df = tipo_compra_df.sort_values("cambio_promedio", ascending=False).copy()
+
+# 2. Gráfico Tron
+base_tipo = alt.Chart(tipo_compra_df).encode(
+    x=alt.X("cambio_promedio:Q", title="CAMBIO TEXTUAL PROMEDIO (%)"),
+    y=alt.Y("Tipo_Procedimiento:N", sort="-x", title="TIPO DE CONTRATACIÓN"),
+    tooltip=[
+        alt.Tooltip("Tipo_Procedimiento:N", title="Tipo de Contratación"),
+        alt.Tooltip("cambio_promedio:Q", title="Cambio Promedio (%)", format=".2f"),
+        alt.Tooltip("total_procesos:Q", title="Total Procesos")
+    ]
+)
+
+grafico_tipo_tron = (
+    base_tipo.mark_bar(opacity=0.8, strokeWidth=1, cornerRadiusEnd=3).encode(
+        color=alt.Color(
+            "cambio_promedio:Q", 
+            scale=alt.Scale(scheme="viridis"),
+            legend=alt.Legend(
+                title="CAMBIO PROMEDIO (%)",
+                orient="right",
+                titleColor="#00FFFF",
+                labelColor="#E0E0E0",
+                labelFont=BODY_FONT,
+                titleFont=BODY_FONT
+            )
+        ),
+        stroke=alt.Color(
+            "cambio_promedio:Q",
+            scale=alt.Scale(scheme="viridis"),
+            legend=None
+        )
+    ) + base_tipo.mark_text(align="left", dx=5, fontWeight="bold", color="#FFFFFF").encode(
+        text=alt.Text("cambio_promedio:Q", format=".1f")
+    )
+).properties(
+    title="DIFERENCIA TEXTUAL PROMEDIO POR TIPO DE CONTRATACIÓN",
+    width=600,
+    height=350
+).configure(
+    background="#0C0C0C"
+).configure_view(strokeOpacity=0).configure_title(
+    color="#00FFFF", font=BODY_FONT, fontSize=18, anchor="start"
+).configure_axis(
+    gridColor="#1a1a1a", labelColor="#E0E0E0", titleColor="#00FFFF", labelFont=BODY_FONT
+).configure_legend(
+    labelColor="#E0E0E0",
+    titleColor="#00FFFF",
+    labelFont=BODY_FONT,
+    titleFont=BODY_FONT
+)
+
+display(grafico_tipo_tron)
+```
+Esta visualización permite comparar el cambio textual promedio entre tipos de procedimiento. Aunque la subasta inversa electrónica concentra gran parte de los procesos analizados, su cambio promedio no se ubica entre los más altos; en cambio, otros procedimientos menos frecuentes muestran promedios mayores, lo que sugiere una mayor heterogeneidad entre la necesidad inicial y el proceso formal asociado.
+
+## Visualizaciones extras: Actividad de publicación por mes, hora y día
+
+
+Estas visualizaciones nos permiten identificar estacionalidad mensual y patrones horarios en la publicación de procesos formales.
+
+```{python}
+
+
+# =========================
+# 1. Filtrar procesos con fecha válida
+# =========================
+# Para estas visualizaciones usamos los procesos formales únicos
+procesos_unicos = res.drop_duplicates(subset=["Codigo_Proceso"]).copy()
+
+# Convertir la columna de fechas a formato datetime
+if "Fecha_Publicacion_Proceso" in procesos_unicos.columns:
+    procesos_unicos["Fecha_Pub_DT"] = pd.to_datetime(procesos_unicos["Fecha_Publicacion_Proceso"], errors="coerce")
+    procesos_unicos = procesos_unicos.dropna(subset=["Fecha_Pub_DT"])
+    
+    # =========================
+    # 2. Agrupar por mes
+    # =========================
+    procesos_unicos["Mes"] = procesos_unicos["Fecha_Pub_DT"].dt.to_period("M").astype(str)
+    mes_counts = procesos_unicos["Mes"].value_counts().reset_index()
+    mes_counts.columns = ["Mes", "Cantidad"]
+    mes_counts = mes_counts.sort_values("Mes")
+    print(procesos_unicos.shape)
+    # 3. Agrupar por hora
+    # =========================
+    procesos_unicos["Hora"] = procesos_unicos["Fecha_Pub_DT"].dt.hour
+    hora_counts = procesos_unicos["Hora"].value_counts().reset_index()
+    hora_counts.columns = ["Hora", "Cantidad"]
+    hora_counts = hora_counts.sort_values("Hora")
+    hora_counts["Hora_Str"] = hora_counts["Hora"].astype(str).str.zfill(2) + ":00"
+    # =========================
+    # 4. Agrupar por día de la semana
+    # =========================
+    orden_dias = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo']
+    # dayofweek: 0=Lunes, 6=Domingo
+    procesos_unicos["Dia_Semana_Num"] = procesos_unicos["Fecha_Pub_DT"].dt.dayofweek
+    nombres_dias = {0: 'Lunes', 1: 'Martes', 2: 'Miércoles', 3: 'Jueves', 4: 'Viernes', 5: 'Sábado', 6: 'Domingo'}
+    procesos_unicos["Dia_Nombre"] = procesos_unicos["Dia_Semana_Num"].map(nombres_dias)
+
+    dia_counts = procesos_unicos["Dia_Nombre"].value_counts().reset_index()
+    dia_counts.columns = ["Dia_Nombre", "Cantidad"]
+    
+else:
+    print("La columna 'Fecha_Publicacion_Procesos' no se encuentra en el dataset.")
+```
+
+```{python}
+#| echo: false
+#| label: fig-contratacion-mes
+#| fig-cap: "Número de publicaciones por mes."
+if "Fecha_Publicacion_Proceso" in procesos_unicos.columns:
+    base_mes = alt.Chart(mes_counts).encode(
+        x=alt.X("Mes:N", title="MES DE PUBLICACIÓN"),
+        y=alt.Y("Cantidad:Q", title="CANTIDAD DE PROCESOS"),
+        tooltip=[
+            alt.Tooltip("Mes:N", title="Mes"),
+            alt.Tooltip("Cantidad:Q", title="Procesos Emitidos", format=",")
+        ]
+    )
+
+    grafico_mes_tron = (
+        base_mes.mark_line(color="#00FFFF", point=alt.OverlayMarkDef(color="#00FFFF", size=60), strokeWidth=3) +
+        base_mes.mark_text(dy=-15, fontWeight="bold", color="#FFFFFF").encode(text=alt.Text("Cantidad:Q", format=","))
+    ).properties(
+        title="EVOLUCIÓN MENSUAL DE PUBLICACIONES",
+        width=650,
+        height=350
+    ).configure(
+        background="#0C0C0C"
+    ).configure_view(strokeOpacity=0).configure_title(
+        color="#00FFFF", font=BODY_FONT, fontSize=18, anchor="start"
+    ).configure_axis(
+        gridColor="#1a1a1a", domainColor="#00FFFF", labelColor="#E0E0E0", titleColor="#00FFFF", labelFont=BODY_FONT
+    )
+
+    display(grafico_mes_tron)
+
+```
+
+Se observa un menor número de publicaciones al inicio del año, seguido de un crecimiento sostenido hasta abril. Posteriormente aparece una caída a mitad de año, una recuperación en julio y un nuevo repunte hacia el cierre del periodo analizado.
+
+```{python}
+#| echo: false
+#| label: fig-contratacion-horas
+#| fig-cap: "Número de publicaciones por hora."
+if "Fecha_Publicacion_Proceso" in procesos_unicos.columns:
+    base_hora = alt.Chart(hora_counts).encode(
+        x=alt.X("Hora_Str:N", title="HORA DEL DÍA (24H)", sort=alt.SortField("Hora")),
+        y=alt.Y("Cantidad:Q", title="CANTIDAD DE PROCESOS"),
+        tooltip=[
+            alt.Tooltip("Hora_Str:N", title="Hora"),
+            alt.Tooltip("Cantidad:Q", title="Procesos Emitidos", format=",")
+        ]
+    )
+
+    grafico_hora_tron = (
+        base_hora.mark_line(color="#00FF7F", point=alt.OverlayMarkDef(color="#00FF7F", size=60), strokeWidth=3) +
+        base_hora.mark_text(dy=-15, fontWeight="bold", color="#FFFFFF").encode(text=alt.Text("Cantidad:Q", format=","))
+    ).properties(
+        title="DISTRIBUCIÓN HORARIA DE PUBLICACIONES",
+        width=650,
+        height=350
+    ).configure(
+        background="#0C0C0C"
+    ).configure_view(strokeOpacity=0).configure_title(
+        color="#00FFFF", font=BODY_FONT, fontSize=18, anchor="start"
+    ).configure_axis(
+        gridColor="#1a1a1a", domainColor="#00FFFF", labelColor="#E0E0E0", titleColor="#00FFFF", labelFont=BODY_FONT
+    )
+
+    display(grafico_hora_tron)
+```
+En esta gráfica se observan publicaciones realizadas fuera del horario laboral habitual. Estos casos pueden considerarse atípicos y constituyen un punto de interés para revisión, especialmente cuando se concentran entre las 21:00 y la medianoche, aunque por sí solos no permiten afirmar una anomalía administrativa.
+
+
+```{python}
+#| echo: false
+#| label: fig-contratacion-dias
+#| fig-cap: "Número de publicaciones por día."
+
+if "Fecha_Publicacion_Proceso" in procesos_unicos.columns:
+    base_dia = alt.Chart(dia_counts).encode(
+        x=alt.X("Dia_Nombre:N", title="DÍA DE LA SEMANA", sort=orden_dias),
+        y=alt.Y("Cantidad:Q", title="CANTIDAD DE PROCESOS"),
+        tooltip=[
+            alt.Tooltip("Dia_Nombre:N", title="Día"),
+            alt.Tooltip("Cantidad:Q", title="Procesos Emitidos", format=",")
+        ]
+    )
+
+    grafico_dia_tron = (
+        base_dia.mark_bar(opacity=0.8, color="#FF00FF", stroke="#FF00FF", strokeWidth=1, cornerRadiusEnd=3) +
+        base_dia.mark_text(dy=-15, fontWeight="bold", color="#FFFFFF").encode(text=alt.Text("Cantidad:Q", format=","))
+    ).properties(
+        title="DISTRIBUCIÓN DE PUBLICACIONES POR DÍA",
+        width=650,
+        height=350
+    ).configure(
+        background="#0C0C0C"
+    ).configure_view(strokeOpacity=0).configure_title(
+        color="#00FFFF", font=BODY_FONT, fontSize=18, anchor="start"
+    ).configure_axis(
+        gridColor="#1a1a1a", domainColor="#00FFFF", labelColor="#E0E0E0", titleColor="#00FFFF", labelFont=BODY_FONT
+    )
+
+    display(grafico_dia_tron)
+```
+En esta gráfica también se identifican publicaciones realizadas fuera de los días laborables, particularmente en sábado y domingo. Estos registros pueden considerarse atípicos y merecen una revisión contextual adicional antes de extraer conclusiones sobre su significado operativo.
+
+## Visualizaciones extras: Montos y alto cambio
+
+Estas visualizaciones complementan el análisis anterior incorporando la dimensión monetaria. El objetivo es observar no solo cuántos procesos existen, sino cuánto monto se concentra en procesos finalizados, especialmente cuando además presentan alto cambio textual.
+
+```{python}
+# =========================
+# 1. Preparacion de datos para visualizaciones de monto
+# =========================
+montos_df = res.drop_duplicates(subset=["Codigo_Proceso"]).copy()
+montos_df["Monto_Proceso"] = pd.to_numeric(montos_df["Monto_Proceso"], errors="coerce")
+montos_df["Fecha_Pub_Proceso_DT"] = pd.to_datetime(
+    montos_df["Fecha_Publicacion_Proceso"],
+    format="%Y-%m-%d %H:%M:%S",
+    errors="coerce"
+)
+
+fechas_faltantes = montos_df["Fecha_Pub_Proceso_DT"].isna()
+if fechas_faltantes.any():
+    montos_df.loc[fechas_faltantes, "Fecha_Pub_Proceso_DT"] = pd.to_datetime(
+        montos_df.loc[fechas_faltantes, "Fecha_Publicacion_Proceso"],
+        errors="coerce"
+    )
+
+def es_finalizada(estado):
+    if pd.isna(estado):
+        return False
+    return "finaliz" in str(estado).strip().lower()
+
+montos_df = montos_df[
+    montos_df["Monto_Proceso"].notna() &
+    montos_df["Fecha_Pub_Proceso_DT"].notna()
+].copy()
+
+finalizadas_conf = montos_df[
+    montos_df["Estado_Coincidencia"].eq("Match Confiable") &
+    montos_df["Estado_Procesos_Todos"].apply(es_finalizada)
+].copy()
+
+finalizadas_conf["Mes"] = finalizadas_conf["Fecha_Pub_Proceso_DT"].dt.to_period("M").astype(str)
+finalizadas_conf["Mes_Orden"] = finalizadas_conf["Fecha_Pub_Proceso_DT"].dt.to_period("M").dt.to_timestamp()
+
+monto_mensual_finalizadas = (
+    finalizadas_conf
+    .groupby(["Mes", "Mes_Orden"], as_index=False)
+    .agg(Monto_Total=("Monto_Proceso", "sum"))
+    .sort_values("Mes_Orden")
+)
+
+finalizadas_alto_cambio = finalizadas_conf[
+    finalizadas_conf["cambio_textual"] > 10
+].copy()
+
+monto_mensual_alto_cambio = (
+    finalizadas_alto_cambio
+    .groupby(["Mes", "Mes_Orden"], as_index=False)
+    .agg(Monto_Total=("Monto_Proceso", "sum"))
+    .sort_values("Mes_Orden")
+)
+
+top_entidades_alto_monto = (
+    finalizadas_alto_cambio
+    .groupby("Entidad_Procesos_Todos", as_index=False)
+    .agg(
+        Monto_Total=("Monto_Proceso", "sum"),
+        Procesos=("Codigo_Proceso", "nunique"),
+        Cambio_Promedio=("cambio_textual", "mean"),
+    )
+    .sort_values(["Monto_Total", "Procesos"], ascending=[False, False])
+    .head(15)
+)
+```
+
+```{python}
+#| echo: false
+#| label: fig-monto-mensual-finalizadas
+#| fig-cap: "Monto mensual total de contrataciones finalizadas con match confiable."
+if not monto_mensual_finalizadas.empty:
+    base_monto_final = alt.Chart(monto_mensual_finalizadas).encode(
+        x=alt.X("Mes:N", title="MES", sort=monto_mensual_finalizadas["Mes"].tolist()),
+        y=alt.Y("Monto_Total:Q", title="MONTO TOTAL (USD)"),
+        tooltip=[
+            alt.Tooltip("Mes:N", title="Mes"),
+            alt.Tooltip("Monto_Total:Q", title="Monto total", format=",.2f"),
+        ]
+    )
+
+    grafico_monto_final = (
+        base_monto_final.mark_line(color="#00FFFF", point=alt.OverlayMarkDef(color="#00FFFF", size=70), strokeWidth=3)
+        + base_monto_final.mark_text(dy=-15, fontWeight="bold", color="#FFFFFF").encode(
+            text=alt.Text("Monto_Total:Q", format=",.0f")
+        )
+    ).properties(
+        title="MONTO MENSUAL DE CONTRATACIONES FINALIZADAS CON MATCH CONFIABLE",
+        width=700,
+        height=350
+    ).configure(
+        background="#0C0C0C"
+    ).configure_view(
+        strokeOpacity=0
+    ).configure_title(
+        color="#00FFFF", font=BODY_FONT, fontSize=18, anchor="start"
+    ).configure_axis(
+        gridColor="#1a1a1a", domainColor="#00FFFF", labelColor="#E0E0E0", titleColor="#00FFFF", labelFont=BODY_FONT
+    )
+
+    display(grafico_monto_final)
+```
+
+Este gráfico permite ver en qué meses se concentró el mayor volumen monetario de procesos finalizados que además lograron un match confiable con una necesidad publicada en NCO.
+
+```{python}
+#| echo: false
+#| label: fig-monto-mensual-alto-cambio
+#| fig-cap: "Monto mensual de contrataciones finalizadas con match confiable y alto cambio textual (>10%)."
+if not monto_mensual_alto_cambio.empty:
+    base_monto_alto = alt.Chart(monto_mensual_alto_cambio).encode(
+        x=alt.X("Mes:N", title="MES", sort=monto_mensual_alto_cambio["Mes"].tolist()),
+        y=alt.Y("Monto_Total:Q", title="MONTO TOTAL (USD)"),
+        tooltip=[
+            alt.Tooltip("Mes:N", title="Mes"),
+            alt.Tooltip("Monto_Total:Q", title="Monto total", format=",.2f"),
+        ]
+    )
+
+    grafico_monto_alto = (
+        base_monto_alto.mark_line(color="#FF8C00", point=alt.OverlayMarkDef(color="#FF8C00", size=70), strokeWidth=3)
+        + base_monto_alto.mark_text(dy=-15, fontWeight="bold", color="#FFFFFF").encode(
+            text=alt.Text("Monto_Total:Q", format=",.0f")
+        )
+    ).properties(
+        title="MONTO MENSUAL DE FINALIZADAS CON ALTO CAMBIO TEXTUAL (>10%)",
+        width=700,
+        height=350
+    ).configure(
+        background="#0C0C0C"
+    ).configure_view(
+        strokeOpacity=0
+    ).configure_title(
+        color="#00FFFF", font=BODY_FONT, fontSize=18, anchor="start"
+    ).configure_axis(
+        gridColor="#1a1a1a", domainColor="#00FFFF", labelColor="#E0E0E0", titleColor="#00FFFF", labelFont=BODY_FONT
+    )
+
+    display(grafico_monto_alto)
+```
+
+Este gráfico muestra cómo se distribuye en el tiempo el monto comprometido en procesos finalizados que, además de tener match confiable, presentan un cambio textual superior al 10%.
+
+```{python}
+#| echo: false
+#| label: fig-top-entidades-alto-monto
+#| fig-cap: "Top 15 entidades con alto cambio textual y mayores montos acumulados."
+if not top_entidades_alto_monto.empty:
+    top_entidades_alto_monto = top_entidades_alto_monto.copy()
+    top_entidades_alto_monto["Entidad_Procesos_Todos"] = pd.Categorical(
+        top_entidades_alto_monto["Entidad_Procesos_Todos"],
+        categories=top_entidades_alto_monto.sort_values("Monto_Total")["Entidad_Procesos_Todos"].tolist(),
+        ordered=True
+    )
+
+    base_top_monto = alt.Chart(top_entidades_alto_monto).encode(
+        y=alt.Y("Entidad_Procesos_Todos:N", title="ENTIDAD", sort=top_entidades_alto_monto["Entidad_Procesos_Todos"].tolist()),
+        x=alt.X("Monto_Total:Q", title="MONTO ACUMULADO (USD)"),
+        tooltip=[
+            alt.Tooltip("Entidad_Procesos_Todos:N", title="Entidad"),
+            alt.Tooltip("Monto_Total:Q", title="Monto acumulado", format=",.2f"),
+            alt.Tooltip("Procesos:Q", title="Procesos"),
+            alt.Tooltip("Cambio_Promedio:Q", title="Cambio promedio (%)", format=".2f"),
+        ]
+    )
+
+    grafico_top_monto = (
+        base_top_monto.mark_bar(opacity=0.85, strokeWidth=1.2, cornerRadiusEnd=4).encode(
+            color=alt.Color("Monto_Total:Q", scale=alt.Scale(scheme="oranges"), legend=None),
+            stroke=alt.Color("Monto_Total:Q", scale=alt.Scale(scheme="oranges"), legend=None)
+        )
+        + base_top_monto.mark_text(align="left", dx=5, fontWeight="bold", color="#FFFFFF").encode(
+            text=alt.Text("Monto_Total:Q", format=",.0f")
+        )
+    ).properties(
+        title="TOP 15 ENTIDADES CON ALTO CAMBIO Y MAYORES MONTOS",
+        width=760,
+        height=alt.Step(26)
+    ).configure(
+        background="#0C0C0C"
+    ).configure_view(
+        strokeOpacity=0
+    ).configure_title(
+        color="#00FFFF", font=BODY_FONT, fontSize=18, anchor="start"
+    ).configure_axis(
+        gridColor="#1a1a1a", domainColor="#00FFFF", labelColor="#E0E0E0", titleColor="#00FFFF", labelFont=BODY_FONT
+    )
+
+    display(grafico_top_monto)
+```
+
+Este ranking permite identificar qué entidades concentran simultáneamente montos más altos y procesos con cambio textual superior al 10%, lo que ayuda a priorizar revisiones sobre casos de mayor relevancia económica.
