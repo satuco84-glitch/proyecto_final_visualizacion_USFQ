@@ -157,7 +157,7 @@ ul.task-list li input[type="checkbox"] {
 </header>
 
 
-<div id="02f6dc64" class="cell" data-execution_count="1">
+<div id="267948e5" class="cell" data-execution_count="1">
 <div class="cell-output cell-output-display">
 
 <style>
@@ -292,7 +292,7 @@ Carga del Dataset
 <p>
 Se trabaja con el archivo consolidado <span class="highlight-cyan">resultados_matcher3_v3.csv</span>, que contiene la salida del proceso de vinculación entre procesos formales de SERCOP y necesidades de contratación NCO.
 </p>
-<div id="54a27ef3" class="cell" data-execution_count="3">
+<div id="bf6fc5b7" class="cell" data-execution_count="3">
 <div class="cell-output cell-output-stdout">
 <pre><code>Dataset cargado: resultados_matcher3_v3.csv
 Filas: 38,997
@@ -310,7 +310,7 @@ Exploración Inicial
 <p>
 Estructura general del dataset: nombres de columnas, tipos y una muestra de registros.
 </p>
-<div id="75155e14" class="cell" data-execution_count="4">
+<div id="cd1f7d43" class="cell" data-execution_count="4">
 <div class="cell-output cell-output-stdout">
 <pre><code>Columnas:
 - Codigo_Proceso
@@ -358,7 +358,7 @@ dtype: object
 \nDimensiones: (38997, 20)</code></pre>
 </div>
 </div>
-<div id="d4aec0f3" class="cell" data-execution_count="5">
+<div id="b79eb491" class="cell" data-execution_count="5">
 <div class="cell-output cell-output-display">
 <div>
 
@@ -511,7 +511,7 @@ dtype: object
 </div>
 </div>
 </div>
-<div id="f6cd74ea" class="cell" data-execution_count="6">
+<div id="64eb8531" class="cell" data-execution_count="6">
 <div class="cell-output cell-output-stdout">
 <pre><code>Procesos únicos: 38997
 NCO no nulos: 38418
@@ -534,7 +534,7 @@ Manejo de Valores Faltantes
 <p>
 Los faltantes se revisan en las variables críticas de emparejamiento, fechas y montos. No se imputan valores en campos sin importanciadebido a que esto marca la ausencia de match que puede ser proc¿vocado por falta de datos después del scraping.
 </p>
-<div id="dcd384d8" class="cell" data-execution_count="7">
+<div id="ee9b1229" class="cell" data-execution_count="7">
 <div class="cell-output cell-output-stdout">
 <pre><code>Fecha_Adjudicacion_Proceso      3125
 Fecha_Entrega_Proforma_NCO       580
@@ -548,7 +548,7 @@ Monto_Proceso                      4
 dtype: int64</code></pre>
 </div>
 </div>
-<div id="ecc8e01b" class="cell" data-execution_count="8">
+<div id="24037bb6" class="cell" data-execution_count="8">
 <div class="cell-output cell-output-stdout">
 <pre><code>Codigo_NCO                     579
 Fecha_Publicacion_Proceso        0
@@ -574,7 +574,7 @@ Transformaciones y Variables Analíticas
 <p>
 Se crean variables auxiliares para facilitar el análisis descriptivo y visual. Las columnas originales se preservan y las transformaciones se hacen en una copia de trabajo.
 </p>
-<div id="9359514a" class="cell" data-execution_count="9">
+<div id="df7c0c7b" class="cell" data-execution_count="9">
 <div class="cell-output cell-output-stdout">
 <pre><code>   Monto_Proceso  Porcentaje_Similaridad  tiene_match  match_confiable  \
 0      333548.98                   88.30         True             True   
@@ -598,7 +598,7 @@ Se crean variables auxiliares para facilitar el análisis descriptivo y visual. 
 4                     237.0  </code></pre>
 </div>
 </div>
-<div id="f686ab39" class="cell" data-execution_count="10">
+<div id="e978de35" class="cell" data-execution_count="10">
 <div class="cell-output cell-output-stdout">
 <pre><code>Duplicados Codigo_Proceso: 0
 Duplicados Codigo_NCO en matches: 0</code></pre>
@@ -618,7 +618,7 @@ Filtrado y Selección de Datos
 <p>
 Se distinguen dos universos analíticos: cobertura total del sistema y subconjunto útil para analizar el cambio textual entre la necesidad y el proceso.
 </p>
-<div id="151e45ad" class="cell" data-execution_count="11">
+<div id="2aee0862" class="cell" data-execution_count="11">
 <div class="cell-output cell-output-stdout">
 <pre><code>Total procesos 2025: 38,997
 Procesos con match: 38,418
@@ -631,27 +631,27 @@ Match Potencial     1695
 Name: count, dtype: int64</code></pre>
 </div>
 </div>
-<div id="fdfbcbf1" class="cell" data-execution_count="12">
+<div id="0948e521" class="cell" data-execution_count="12">
 <div class="cell-output cell-output-display" data-execution_count="12">
 
 <style>
-  #altair-viz-dd95976adb43438b80e471cca13789ec.vega-embed {
+  #altair-viz-4e4fb58d0f9844c7bfee30817dc83934.vega-embed {
     width: 100%;
     display: flex;
   }
 
-  #altair-viz-dd95976adb43438b80e471cca13789ec.vega-embed details,
-  #altair-viz-dd95976adb43438b80e471cca13789ec.vega-embed details summary {
+  #altair-viz-4e4fb58d0f9844c7bfee30817dc83934.vega-embed details,
+  #altair-viz-4e4fb58d0f9844c7bfee30817dc83934.vega-embed details summary {
     position: relative;
   }
 </style>
-<div id="altair-viz-dd95976adb43438b80e471cca13789ec"></div>
+<div id="altair-viz-4e4fb58d0f9844c7bfee30817dc83934"></div>
 <script type="text/javascript">
   var VEGA_DEBUG = (typeof VEGA_DEBUG == "undefined") ? {} : VEGA_DEBUG;
   (function(spec, embedOpt){
     let outputDiv = document.currentScript.previousElementSibling;
-    if (outputDiv.id !== "altair-viz-dd95976adb43438b80e471cca13789ec") {
-      outputDiv = document.getElementById("altair-viz-dd95976adb43438b80e471cca13789ec");
+    if (outputDiv.id !== "altair-viz-4e4fb58d0f9844c7bfee30817dc83934") {
+      outputDiv = document.getElementById("altair-viz-4e4fb58d0f9844c7bfee30817dc83934");
     }
 
     const paths = {
@@ -717,7 +717,7 @@ Exploración de Texto
 <p>
 Como exploración complementaria, se pueden revisar los términos más frecuentes en las descripciones de necesidad. Esto ayuda a identificar el vocabulario dominante del corpus antes de construir visualizaciones más explicativas.
 </p>
-<div id="50b70b79" class="cell" data-execution_count="13">
+<div id="38c29cca" class="cell" data-execution_count="13">
 <div class="cell-output cell-output-stdout">
 <pre><code>          palabra  frecuencia
 0     adquisicion       18293
@@ -737,27 +737,27 @@ Como exploración complementaria, se pueden revisar los términos más frecuente
 14        general        2034</code></pre>
 </div>
 </div>
-<div id="79c7cf92" class="cell" data-execution_count="14">
+<div id="6be7783a" class="cell" data-execution_count="14">
 <div class="cell-output cell-output-display" data-execution_count="14">
 
 <style>
-  #altair-viz-b1d0de54e5f749c0b7b79aa5d4bd583a.vega-embed {
+  #altair-viz-306cb2ca2ff748f2a969d0d269137c4e.vega-embed {
     width: 100%;
     display: flex;
   }
 
-  #altair-viz-b1d0de54e5f749c0b7b79aa5d4bd583a.vega-embed details,
-  #altair-viz-b1d0de54e5f749c0b7b79aa5d4bd583a.vega-embed details summary {
+  #altair-viz-306cb2ca2ff748f2a969d0d269137c4e.vega-embed details,
+  #altair-viz-306cb2ca2ff748f2a969d0d269137c4e.vega-embed details summary {
     position: relative;
   }
 </style>
-<div id="altair-viz-b1d0de54e5f749c0b7b79aa5d4bd583a"></div>
+<div id="altair-viz-306cb2ca2ff748f2a969d0d269137c4e"></div>
 <script type="text/javascript">
   var VEGA_DEBUG = (typeof VEGA_DEBUG == "undefined") ? {} : VEGA_DEBUG;
   (function(spec, embedOpt){
     let outputDiv = document.currentScript.previousElementSibling;
-    if (outputDiv.id !== "altair-viz-b1d0de54e5f749c0b7b79aa5d4bd583a") {
-      outputDiv = document.getElementById("altair-viz-b1d0de54e5f749c0b7b79aa5d4bd583a");
+    if (outputDiv.id !== "altair-viz-306cb2ca2ff748f2a969d0d269137c4e") {
+      outputDiv = document.getElementById("altair-viz-306cb2ca2ff748f2a969d0d269137c4e");
     }
 
     const paths = {
@@ -809,7 +809,7 @@ Como exploración complementaria, se pueden revisar los términos más frecuente
 </script>
 </div>
 </div>
-<div id="3ef2f162" class="cell page-columns page-full" data-execution_count="15">
+<div id="20f57783" class="cell page-columns page-full" data-execution_count="15">
 <div class="cell-output cell-output-display page-columns page-full">
 <div class="page-columns page-full">
 <figure class="figure page-columns page-full">
