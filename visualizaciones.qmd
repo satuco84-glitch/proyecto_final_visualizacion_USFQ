@@ -741,6 +741,53 @@ display(chart_ranking_tron)
 Se observa que 10 de los 20 procesos con mayor cambio textual corresponden a Gobiernos Autónomos Descentralizados. Este resultado nos podría dar una alerta de en donde se podría presentar casos de direccionamiento de procesos. 
 
 
+### Distribución del cambio textual (>= {umbral}%)
+
+```{python}
+#| echo: false
+#| label: fig-hist-cambio
+#| fig-cap: "Distribución del cambio textual (>= {umbral}%) en procesos formales con match confiable."
+res_hist = res_best[res_best["cambio_textual"] >= umbral].copy()
+
+hist_cambio = (
+    alt.Chart(res_hist)
+    .mark_bar(opacity=0.85, cornerRadiusEnd=2)
+    .encode(
+        x=alt.X(
+            "cambio_textual:Q",
+            bin=alt.Bin(step=2, extent=[umbral, 100]),
+            title=f"CAMBIO TEXTUAL (%) ≥ {umbral}"
+        ),
+        y=alt.Y("count():Q", title="NÚMERO DE PROCESOS"),
+        tooltip=[
+            alt.Tooltip("count():Q", title="Procesos"),
+            alt.Tooltip("cambio_textual:Q", bin=alt.Bin(step=2), title="Rango (%)")
+        ],
+        color=alt.value("#FF8C00"),
+        stroke=alt.value("#FF8C00")
+    )
+    .properties(
+        title="DISTRIBUCIÓN DEL CAMBIO TEXTUAL (PROCESOS FORMALES)",
+        width=700,
+        height=320
+    )
+    .configure(
+        background="#0C0C0C"
+    ).configure_view(
+        strokeOpacity=0
+    ).configure_title(
+        color="#00FFFF", font=BODY_FONT, fontSize=18, anchor="start"
+    ).configure_axis(
+        gridColor="#1a1a1a", domainColor="#00FFFF", labelColor="#E0E0E0",
+        titleColor="#00FFFF", labelFont=BODY_FONT, titleFont=BODY_FONT
+    )
+)
+
+display(hist_cambio)
+```
+
+Este histograma resume cuántos procesos formales (con match confiable) quedan en cada rango de cambio textual por encima del umbral del {umbral}%. Complementa el ranking mostrando la forma completa de la distribución.
+
 
 ## Mapa de Calor: Concentración de alto cambio en entidades.
 
@@ -1118,7 +1165,7 @@ if "Entidad_ID" not in top_ent.columns:
 
 base_ent = alt.Chart(top_ent).encode(
     x=alt.X("casos_alto_cambio:Q", title="NÚMERO DE CASOS"),
-    y=alt.Y("Entidad_ID:N", sort="-x", title="ID DE ENTIDAD (Ver Leyenda Inferior)"),
+    y=alt.Y("Entidad_ID:N", sort="-x", title="ID DE ENTIDAD (Ver el glosario en la parte inferior)"),
     tooltip=[
         alt.Tooltip("Entidad_Procesos_Todos:N", title="Entidad"),
         alt.Tooltip("Entidad_ID:N", title="ID"),
@@ -1174,7 +1221,7 @@ legend_html = f"""
     box-shadow: 0 0 10px rgba(0, 255, 255, 0.2);
 ">
     <h3 style="color: #00FFFF; margin-top: 0; border-bottom: 1px solid #1a1a1a; padding-bottom: 10px;">
-        LEYENDA: GLOSARIO DE ENTIDADES
+        GLOSARIO DE ENTIDADES
     </h3>
     <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 10px; font-size: 0.9em;">
 """
